@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Groups by URL",
+  "short_name": "Tab Groups",
+  "version": "1.1.0",
+  "description": "Automatically sorts tabs into predefined tab groups with name and color, based on their URL.",
+  "homepage_url": "https://github.com/chrssng/chrome-tab-groups",
+  "minimum_chrome_version": "110",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Tab Groups by URL",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

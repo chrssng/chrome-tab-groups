@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <title>Tab Groups</title>
+  <link rel="stylesheet" href="ui/shared.css">
+  <link rel="stylesheet" href="ui/popup.css">
+</head>
+<body>
+  <header class="head">
+    <img src="icons/icon32.png" width="20" height="20" alt="">
+    <h1>Tab Groups</h1>
+    <label class="switch" title="Group tabs automatically">
+      <input type="checkbox" id="enabled">
+      <span class="track" aria-hidden="true"></span>
+      <span class="sr-only">Group tabs automatically</span>
+    </label>
+  </header>
+
+  <p id="paused" class="paused" hidden>Paused – tabs are only sorted when you click a button.</p>
+
+  <section class="launch" id="launch" aria-labelledby="launch-label" hidden>
+    <div class="eyebrow" id="launch-label">Open group</div>
+    <ul class="launch-list" id="launch-list"></ul>
+  </section>
+
+  <section class="current" aria-labelledby="current-label">
+    <div class="eyebrow" id="current-label">Current tab</div>
+    <div class="host" id="host">…</div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <form id="assign" class="assign" hidden>
+    <label for="target" class="assign-label" id="assign-label"></label>
+    <select id="target" class="select"></select>
+    <div id="new-group" class="new-group" hidden>
+      <input id="new-name" class="input" type="text" maxlength="60" autocomplete="off"
+             placeholder="Name of the new group" aria-label="Name of the new group">
+      <div id="new-color"></div>
+      <div id="new-error" class="field-error" role="alert" hidden></div>
+    </div>
+    <button type="submit" class="btn primary" id="assign-btn">Assign</button>
+  </form>
+
+  <footer class="actions">
+    <button type="button" class="btn" id="sort-all"></button>
+    <button type="button" class="btn ghost" id="manage"></button>
+  </footer>
+  <p id="msg" class="msg" role="status" aria-live="polite"></p>
+
+  <script type="module" src="ui/popup.js"></script>
+</body>
+</html>

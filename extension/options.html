@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Tab Groups by URL – Settings</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="ui/shared.css">
+  <link rel="stylesheet" href="ui/options.css">
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <img src="icons/icon128.png" alt="" width="48" height="48">
+      <div>
+        <h1>Tab Groups by URL</h1>
+        <p class="lede">When you open a page whose URL matches a pattern, the tab automatically lands in the matching tab group – with the name and color you set here. Click the extension’s icon to open any group with all its pages in one go.</p>
+      </div>
+    </header>
+
+    <div id="external-change" class="banner" role="status" hidden>
+      <span>The settings have been changed elsewhere in the meantime (e.g. from the popup or on another device).</span>
+      <button type="button" class="btn" id="reload">Reload</button>
+    </div>
+
+    <section class="panel" aria-labelledby="h-groups">
+      <h2 id="h-groups">Groups</h2>
+      <p class="panel-sub">If a URL matches several groups, the <strong>topmost</strong> one wins.</p>
+
+      <div id="empty" class="empty" hidden>
+        <p class="empty-title">No groups yet</p>
+        <p class="muted">Add a group, give it a name and a color, and enter the URLs that belong in it.</p>
+      </div>
+
+      <ol id="groups" class="groups" aria-label="Groups"></ol>
+
+      <div class="add-row">
+        <button type="button" class="btn primary" id="add-group"></button>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-test">
+      <h2 id="h-test">Test a URL</h2>
+      <p class="panel-sub">Checks the current settings – including unsaved changes.</p>
+      <div class="test-row">
+        <label class="sr-only" for="test-url">URL to test</label>
+        <input class="input" id="test-url" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+               placeholder="e.g. https://github.com/my-company/project">
+      </div>
+      <div id="test-result" class="test-result" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-behaviour">
+      <h2 id="h-behaviour">Behavior</h2>
+      <div class="settings">
+        <label class="switch setting">
+          <input type="checkbox" id="set-enabled">
+          <span class="track" aria-hidden="true"></span>
+          <span class="setting-text">
+            <span class="setting-title">Group tabs automatically</span>
+            <span class="setting-sub">When this is off, tabs are only sorted when you choose “Sort all tabs”.</span>
+          </span>
+        </label>
+        <label class="switch setting">
+          <input type="checkbox" id="set-ungroup">
+          <span class="track" aria-hidden="true"></span>
+          <span class="setting-text">
+            <span class="setting-title">Remove a tab from its group when it leaves the group</span>
+            <span class="setting-sub">If a tab navigates to a URL that no rule matches, it is taken out of its group (only groups managed here).</span>
+          </span>
+        </label>
+      </div>
+      <div class="sort-row">
+        <button type="button" class="btn" id="sort-all"></button>
+        <span class="muted small">Sorts all tabs that are already open, in all windows, according to the saved rules.</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-syntax">
+      <details class="syntax">
+        <summary><h2 id="h-syntax">How to write URL patterns</h2></summary>
+        <table>
+          <thead><tr><th scope="col">Pattern</th><th scope="col">Matches</th></tr></thead>
+          <tbody>
+            <tr><td><code>github.com</code></td><td>github.com and all subdomains (www., gist., …), any path</td></tr>
+            <tr><td><code>*.atlassian.net</code></td><td>same as <code>atlassian.net</code></td></tr>
+            <tr><td><code>github.com/my-company</code></td><td>only URLs that start with this path</td></tr>
+            <tr><td><code>github.com/*/issues</code></td><td><code>*</code> stands for any number of characters</td></tr>
+            <tr><td><code>localhost:3000</code></td><td>only this port</td></tr>
+            <tr><td><code>https://intranet.example.com/wiki</code></td><td>with scheme – <code>http://</code> doesn’t match then</td></tr>
+            <tr><td><code>/\.pdf$/i</code></td><td>regular expression, tested against the full URL</td></tr>
+            <tr><td><code>!mail.google.com</code></td><td>exclusion: if the URL matches it, the group is skipped</td></tr>
+            <tr><td><code># note</code></td><td>comment, ignored</td></tr>
+          </tbody>
+        </table>
+        <p class="muted small">Matching is case-insensitive, and a leading <code>www.</code> is ignored. Patterns (except regular expressions) match the beginning of the URL – anything after that matches automatically.</p>
+        <h3 class="syntax-sub">Pages to open</h3>
+        <p class="muted small">Concrete URLs that “Open group” loads as tabs, e.g. <code>https://github.com/my-company/webshop/pulls</code>. Without a scheme, <code>https://</code> is added (<code>http://</code> for <code>localhost</code>, IP addresses and URLs with a port). If the field is empty, the URL patterns that are concrete URLs are opened. Pages that are already open in the group are not opened twice; an empty “New Tab” is used for the first page.</p>
+      </details>
+    </section>
+
+    <section class="panel" aria-labelledby="h-backup">
+      <h2 id="h-backup">Back up &amp; transfer</h2>
+      <p class="panel-sub">Your groups are synced via your Google account if Chrome sync is turned on for extensions. You can also back them up to a file.</p>
+      <div class="backup-row">
+        <button type="button" class="btn" id="export"></button>
+        <button type="button" class="btn" id="import"></button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+    </section>
+  </div>
+
+  <div class="savebar" id="savebar" aria-hidden="true">
+    <div class="savebar-inner">
+      <span class="savebar-text" id="savebar-text">Unsaved changes</span>
+      <button type="button" class="btn ghost" id="discard">Discard</button>
+      <button type="button" class="btn primary" id="save">Save</button>
+    </div>
+  </div>
+
+  <script type="module" src="ui/options.js"></script>
+</body>
+</html>
