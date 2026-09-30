@@ -1,5 +1,15 @@
 import { nextFreeColor } from '../lib/colors.js';
-import { loadConfig, saveConfig, saveSettings, normalizeGroup, newId } from '../lib/config.js';
+import {
+  loadConfig,
+  saveConfig,
+  saveSettings,
+  normalizeGroup,
+  newId,
+  groupTitle,
+  ownerOf,
+  sortBySection,
+  categoryName,
+} from '../lib/config.js';
 import {
   compileGroups,
   findMatch,
@@ -27,6 +37,7 @@ const els = {
   target: $('#target'),
   newGroup: $('#new-group'),
   newName: $('#new-name'),
+  newCategory: $('#new-category'),
   newColor: $('#new-color'),
   newError: $('#new-error'),
   assignBtn: $('#assign-btn'),
@@ -41,6 +52,10 @@ let url = '';
 let pattern = null; // suggested pattern for the current tab's domain
 
 const namedGroups = () => config.groups.filter((g) => g.name);
+const titleOf = (group) => groupTitle(group, config.categories);
+const categoryLabel = (id) => categoryName(config.categories, id) || 'Unnamed category';
+/** Headings only make sense if the groups are spread over several categories. */
+const severalCategories = (groups) => new Set(groups.map((g) => g.category)).size > 1;
 const sameText = (a, b) => a.trim().toLocaleLowerCase('en') === b.trim().toLocaleLowerCase('en');
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
@@ -76,7 +91,15 @@ function showMessage(kind, text) {
 
 /* ---------- Display ---------- */
 
-/** "Open group" list: every group with URLs is a single click. */
+/** IDs of the configured groups that are open in the window. */
+async function openGroupIds(windowId) {
+  if (!Number.isInteger(windowId)) return new Set();
+  const { owners = {} } = await chrome.storage.session.get('owners').catch(() => ({}));
+  const ids = (await chrome.tabGroups.query({ windowId })).map((g) => ownerOf(g, config, owners[g.id])?.id);
+  return new Set(ids.filter(Boolean));
+}
+
+/** "Open group" list: every group with URLs is a single click – with categories under their headings. */
 async function renderLaunch() {
   const entries = namedGroups()
     .map((group) => ({ group, urls: urlsToOpen(group).urls }))
@@ -84,14 +107,11 @@ async function renderLaunch() {
   els.launch.hidden = !entries.length;
   if (!entries.length) return;
 
-  const windowId = tab?.windowId;
-  const openHere = new Set(
-    Number.isInteger(windowId) ? (await chrome.tabGroups.query({ windowId })).map((g) => g.title ?? '') : [],
-  );
-  els.launchList.replaceChildren(
-    ...entries.map(({ group, urls }) => {
+  const openHere = await openGroupIds(tab?.windowId);
+  const rows = (list) =>
+    list.map(({ group, urls }) => {
       const count = plural(urls.length, 'page', 'pages');
-      const isOpen = openHere.has(group.name);
+      const isOpen = openHere.has(group.id);
       return h(
         'li',
         {},
@@ -102,13 +122,13 @@ async function renderLaunch() {
             class: 'launch-row',
             dataset: { id: group.id },
             title: urls.join('\n'),
-            'aria-label': `Open “${group.name}” – ${count}${isOpen ? ', already open' : ''}`,
-            onclick: () => launch(group.id),
+            'aria-label': `Open “${titleOf(group)}” – ${count}${isOpen ? ', already open' : ''}`,
+            onclick: () => launch({ type: 'openGroup', groupId: group.id }),
           },
           h(
             'span',
             { class: 'launch-head' },
-            chip(group.name, group.color),
+            chip(titleOf(group), group.color),
             h('span', { class: 'launch-count' }, count),
             isOpen
               ? h('span', { class: 'tag', title: 'Already open in this window – missing pages will be added.' }, 'open')
@@ -119,8 +139,45 @@ async function renderLaunch() {
           icon('launch'),
         ),
       );
-    }),
-  );
+    });
+
+  if (!severalCategories(entries.map((e) => e.group))) {
+    els.launchList.replaceChildren(...rows(entries));
+    return;
+  }
+  // One block per category: heading with folder icon, its groups inside
+  const blocks = [];
+  for (const category of config.categories) {
+    const inside = entries.filter((e) => e.group.category === category.id);
+    if (!inside.length) continue;
+    const name = category.name || 'Unnamed category';
+    blocks.push(
+      h(
+        'li',
+        { class: 'launch-block' },
+        h(
+          'div',
+          { class: 'launch-cat' },
+          icon('folder'),
+          h('span', { class: 'launch-cat-name' }, name),
+          inside.length > 1
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  class: 'link-btn launch-all',
+                  'aria-label': `Open all ${inside.length} groups of “${name}”`,
+                  onclick: () => launch({ type: 'openCategory', categoryId: category.id }),
+                },
+                'Open all',
+              )
+            : null,
+        ),
+        h('ul', { class: 'launch-sublist', 'aria-label': name }, rows(inside)),
+      ),
+    );
+  }
+  els.launchList.replaceChildren(...blocks);
 }
 
 async function renderStatus() {
@@ -130,17 +187,22 @@ async function renderStatus() {
   const parts = [];
 
   if (match) {
+    // “in Work” – unless there is only one category, or the title already shows it
+    const inCategory = severalCategories(namedGroups()) && !match.group.showCategory;
     parts.push(
       h(
         'div',
         { class: 'status-line' },
         h('span', { class: 'muted' }, 'Belongs to'),
-        chip(match.group.name, match.group.color),
+        chip(titleOf(match.group), match.group.color),
+        inCategory
+          ? [h('span', { class: 'muted' }, 'in'), h('span', { class: 'status-cat' }, icon('folder'), categoryLabel(match.group.category))]
+          : null,
         h('span', { class: 'muted' }, 'via'),
         h('code', {}, match.pattern),
       ),
     );
-    if (!tab.pinned && (await groupTitleOf(tab)) !== match.group.name) {
+    if (!tab.pinned && (await groupTitleOf(tab)) !== titleOf(match.group)) {
       parts.push(
         h(
           'button',
@@ -165,7 +227,15 @@ function renderAssign() {
   const match = matchFor(config.groups);
   const options = [];
   if (groups.length && !match) options.push(h('option', { value: '', disabled: true }, 'Choose a group …'));
-  for (const g of groups) options.push(h('option', { value: g.id }, g.enabled ? g.name : `${g.name} (paused)`));
+  const option = (g) => h('option', { value: g.id }, g.enabled ? g.name : `${g.name} (paused)`);
+  if (severalCategories(groups)) {
+    for (const category of config.categories) {
+      const inside = groups.filter((g) => g.category === category.id);
+      if (inside.length) options.push(h('optgroup', { label: category.name || 'Unnamed category' }, inside.map(option)));
+    }
+  } else {
+    options.push(...groups.map(option));
+  }
   options.push(h('option', { value: NEW }, 'New group …'));
   els.target.replaceChildren(...options);
   els.target.value = match ? match.group.id : groups.length ? '' : NEW;
@@ -181,8 +251,14 @@ function onTargetChange() {
   if (isNew && !els.newColor.firstChild) {
     els.newColor.append(swatches('new-color', nextFreeColor(config.groups), { label: 'Color of the new group' }));
   }
-
   const match = matchFor(config.groups);
+  if (isNew && !els.newCategory.options.length) {
+    // Preselected: the category of the group that catches the page now – so the new group can go in front of it
+    els.newCategory.replaceChildren(...config.categories.map((c) => h('option', { value: c.id }, categoryLabel(c.id))));
+    els.newCategory.value = match?.group.category ?? config.categories[0].id;
+  }
+  els.newCategory.hidden = config.categories.length < 2;
+
   const already = !isNew && match && match.group.id === value;
   els.assignBtn.disabled = !value || already;
   els.assignBtn.textContent = already ? 'Already assigned' : isNew ? 'Create group & assign' : 'Assign';
@@ -190,11 +266,12 @@ function onTargetChange() {
 
 /* ---------- Actions ---------- */
 
-async function launch(groupId) {
+/** message: { type: 'openGroup', groupId } or { type: 'openCategory', categoryId } */
+async function launch(message) {
   const rows = [...els.launchList.querySelectorAll('button')];
   rows.forEach((row) => (row.disabled = true));
   try {
-    const result = await chrome.runtime.sendMessage({ type: 'openGroup', groupId, windowId: tab?.windowId });
+    const result = await chrome.runtime.sendMessage({ ...message, windowId: tab?.windowId });
     if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
     if (result.failed?.length) {
       showMessage(
@@ -231,15 +308,17 @@ async function assign(event) {
   const targetId = els.target.value;
   if (!targetId) return;
 
-  const groups = structuredClone(config.groups);
+  let groups = structuredClone(config.groups);
   let target;
 
   if (targetId === NEW) {
     const name = els.newName.value.trim();
+    const category = els.newCategory.value || config.categories[0].id;
+    const where = config.categories.length > 1 ? ` in “${categoryLabel(category)}”` : '';
     const error = !name
       ? 'Please enter a name.'
-      : groups.some((g) => sameText(g.name, name))
-        ? `“${name}” already exists – pick that group from the list.`
+      : groups.some((g) => g.category === category && sameText(g.name, name))
+        ? `“${name}” already exists${where} – pick that group from the list.`
         : null;
     if (error) {
       els.newError.textContent = error;
@@ -248,8 +327,8 @@ async function assign(event) {
       return;
     }
     const color = document.querySelector('input[name="new-color"]:checked')?.value;
-    target = normalizeGroup({ id: newId(), name, color, patterns: [] });
-    groups.push(target);
+    target = normalizeGroup({ id: newId(), name, color, patterns: [], category });
+    groups = sortBySection([...groups, target], config.categories); // at the end of its category
   } else {
     target = groups.find((g) => g.id === targetId);
     if (!target) return;
@@ -264,26 +343,29 @@ async function assign(event) {
   target.enabled = true;
 
   // … and if a group further up still wins (e.g. google.com before mail.google.com),
-  // the target group is moved right in front of it.
+  // the target group is moved right in front of it – within its category.
   const winner = matchFor(groups);
-  if (winner && winner.group.id !== target.id) {
+  if (winner && winner.group.id !== target.id && winner.group.category === target.category) {
     groups.splice(groups.indexOf(target), 1);
     groups.splice(groups.findIndex((g) => g.id === winner.group.id), 0, target);
   }
 
   els.assignBtn.disabled = true;
   try {
-    config = await saveConfig({ settings: config.settings, groups });
+    config = await saveConfig({ settings: config.settings, categories: config.categories, groups });
     await chrome.runtime.sendMessage({ type: 'sortTab', tabId: tab.id });
     await refreshTab();
     const final = matchFor(config.groups);
     if (final?.group.id === target.id) {
       showMessage('ok', `${pattern} now belongs to “${target.name}”.`);
+    } else if (final) {
+      showMessage('warn', `Saved, but “${final.group.name}” further up still wins – move “${target.name}” above it in the settings.`);
     } else {
       showMessage('warn', `Saved, but an exclusion pattern in “${target.name}” prevents the assignment.`);
     }
     els.newName.value = '';
     els.newColor.replaceChildren();
+    els.newCategory.replaceChildren();
     await renderStatus();
     renderAssign();
     await renderLaunch();

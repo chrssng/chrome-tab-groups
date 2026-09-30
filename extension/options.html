@@ -25,18 +25,19 @@
     </div>
 
     <section class="panel" aria-labelledby="h-groups">
-      <h2 id="h-groups">Groups</h2>
-      <p class="panel-sub">If a URL matches several groups, the <strong>topmost</strong> one wins.</p>
-
-      <div id="empty" class="empty" hidden>
-        <p class="empty-title">No groups yet</p>
-        <p class="muted">Add a group, give it a name and a color, and enter the URLs that belong in it.</p>
+      <div class="panel-head">
+        <div>
+          <h2 id="h-groups">Groups</h2>
+          <p class="panel-sub">Sorted into categories. If a URL matches several groups, the <strong>topmost</strong> one wins.</p>
+        </div>
+        <button type="button" class="btn ghost small" id="collapse-all"></button>
       </div>
 
-      <ol id="groups" class="groups" aria-label="Groups"></ol>
+      <div id="groups" class="sections" aria-label="Groups"></div>
 
       <div class="add-row">
         <button type="button" class="btn primary" id="add-group"></button>
+        <button type="button" class="btn" id="add-category"></button>
       </div>
     </section>
 
@@ -109,15 +110,31 @@
     </section>
 
     <section class="panel" aria-labelledby="h-backup">
-      <h2 id="h-backup">Back up &amp; transfer</h2>
-      <p class="panel-sub">Your groups are synced via your Google account if Chrome sync is turned on for extensions. You can also back them up to a file.</p>
+      <h2 id="h-backup">Back up, transfer &amp; reset</h2>
+      <p class="panel-sub">Your groups are synced via your Google account if Chrome sync is turned on for extensions. You can also back them up to a file – or start over from scratch.</p>
       <div class="backup-row">
         <button type="button" class="btn" id="export"></button>
         <button type="button" class="btn" id="import"></button>
         <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <button type="button" class="btn danger" id="reset"></button>
       </div>
     </section>
   </div>
+
+  <dialog class="dialog" id="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-summary">
+    <form method="dialog">
+      <h2 id="reset-title">Reset everything?</h2>
+      <p class="dialog-sub" id="reset-summary">All categories and groups are removed, and the Behavior options go back to their defaults – as right after installing. Tab groups that are open right now stay as they are.</p>
+      <p class="dialog-sub">After saving, this also applies to every computer that syncs this extension via Chrome sync. Tip: <strong>Export</strong> your groups first.</p>
+      <div class="dialog-foot">
+        <span class="muted small">Nothing changes until you click “Save”.</span>
+        <span class="dialog-actions">
+          <button type="submit" class="btn ghost" value="cancel" autofocus>Cancel</button>
+          <button type="submit" class="btn danger" value="reset">Reset</button>
+        </span>
+      </div>
+    </form>
+  </dialog>
 
   <dialog class="dialog" id="import-dialog" aria-labelledby="import-title" aria-describedby="import-summary">
     <form method="dialog">
@@ -126,7 +143,7 @@
       <div class="choices">
         <button type="submit" class="choice" value="add">
           <span class="choice-title">Add to my groups</span>
-          <span class="choice-sub">Your groups and settings stay. The groups from the file are added at the end – except those whose name already exists.</span>
+          <span class="choice-sub">Your groups and settings stay. The groups from the file are added – except those whose name already exists in the same category.</span>
         </button>
         <button type="submit" class="choice danger" value="replace">
           <span class="choice-title">Replace all groups</span>

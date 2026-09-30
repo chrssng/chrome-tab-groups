@@ -87,6 +87,83 @@ body {
 .card-head:hover .drag-handle { opacity: 1; }
 .group-card.is-dragging { opacity: 0.45; border-style: dashed; box-shadow: none; }
 
+/* ---------- Categories ---------- */
+
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.panel-head .btn { flex: none; margin-top: -4px; }
+
+.sections { display: grid; gap: 16px; }
+/* A category is a tinted frame around its header and its group cards */
+.cat-section {
+  display: grid;
+  gap: 12px;
+  padding: 10px 14px 14px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.cat-section.is-collapsed { padding-bottom: 10px; }
+.cat-section.is-flashing { animation: cat-flash 1.2s ease-out; }
+@keyframes cat-flash {
+  from { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent); }
+  to { box-shadow: 0 0 0 2px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-section.is-flashing { animation-duration: 0.01s; }
+}
+.cat-section.is-collapsed > .groups { display: none; }
+.cat-section > .groups { gap: 10px; margin-left: 6px; }
+
+/* Collapse/expand: chevron points down when open, right when collapsed */
+.fold svg,
+#collapse-all svg { transition: transform 0.15s ease; }
+.is-collapsed > .cat-head > .fold svg,
+.is-collapsed > .card-head > .fold svg,
+#collapse-all.is-folded svg { transform: rotate(-90deg); }
+.card-head .fold { margin-right: -8px; }
+.group-card.is-collapsed > .card-body { display: none; }
+.group-card.is-collapsed > .card-head { border-bottom: 0; }
+.group-card.has-errors { border-color: var(--danger); }
+
+.cat-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.cat-icon { display: grid; place-items: center; margin: 0 -2px 0 -6px; color: var(--text-2); }
+.cat-icon svg { width: 20px; height: 20px; }
+/* Looks like the group's name field – only the width fits into the header */
+.cat-name.input {
+  width: auto;
+  flex: 1 1 140px;
+  max-width: 260px;
+  min-width: 110px;
+}
+.cat-count { font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+.cat-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.cat-tools .btn.small { margin: 0 2px 0 6px; }
+.switch input:indeterminate + .track { background: var(--accent-soft); border-color: var(--accent); }
+.switch input:indeterminate + .track::after { transform: translateX(8px); }
+
+.cat-empty {
+  padding: 18px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.groups:has(.group-card) > .cat-empty { display: none; }
+.cat-empty p { margin: 0; }
+.cat-empty .empty-title { color: var(--text); }
+
+.field.category-field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.category-field .select { width: auto; min-width: 180px; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); cursor: pointer; }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.check:has(input:disabled) { opacity: 0.5; cursor: default; }
+
 .order {
   flex: none;
   display: grid;
@@ -204,16 +281,9 @@ body {
 .group-card.is-disabled .card-body { opacity: 0.55; }
 .group-card.is-disabled .card-body:focus-within { opacity: 1; }
 
-.empty {
-  text-align: center;
-  padding: 30px 20px;
-  border: 1.5px dashed var(--border-strong);
-  border-radius: 12px;
-}
-.empty p { margin: 0; }
 .empty-title { font-weight: 600; font-size: 15px; margin-bottom: 4px !important; }
 
-.add-row { margin-top: 16px; }
+.add-row { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; }
 
 /* ---------- Test ---------- */
 
@@ -296,6 +366,9 @@ body {
 /* ---------- Backup ---------- */
 
 .backup-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.backup-row #reset { margin-left: auto; }
+.btn.danger { color: var(--danger); }
+.btn.danger:hover { background: var(--danger-soft); border-color: var(--danger); }
 
 /* ---------- Import dialog ---------- */
 
@@ -311,6 +384,9 @@ body {
 .dialog::backdrop { background: rgb(0 0 0 / 0.45); }
 .dialog h2 { font-size: 17px; }
 .dialog-sub { margin: 4px 0 18px; color: var(--text-2); font-size: 13.5px; }
+.dialog-sub + .dialog-sub { margin-top: -8px; }
+.dialog-sub strong { color: var(--text); font-weight: 600; }
+.dialog-actions { display: flex; gap: 8px; flex: none; }
 .choices { display: grid; gap: 10px; }
 .choice {
   display: grid;
@@ -384,4 +460,6 @@ body.has-savebar .toast { bottom: 96px; }
   .switch-label { display: none; }
   .banner { flex-direction: column; align-items: flex-start; }
   .savebar-inner { flex-wrap: wrap; }
+  .cat-section { padding: 8px 8px 10px 4px; }
+  .cat-section > .groups { margin-left: 2px; }
 }

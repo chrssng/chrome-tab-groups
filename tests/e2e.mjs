@@ -310,6 +310,12 @@ await optionsPage.bringToFront();
 await optionsPage.reload();
 await optionsPage.waitForSelector('.group-card');
 check('Settings page shows all groups', (await optionsPage.locator('.group-card').count()) === 6);
+check(
+  'Without categories, all groups are in “Default”',
+  (await optionsPage.locator('.cat-section').count()) === 1 &&
+    (await optionsPage.locator('.cat-section .cat-name').inputValue()) === 'Default' &&
+    (await optionsPage.locator('.cat-head [data-cat-action="delete"]').isDisabled()),
+);
 
 await optionsPage.click('#add-group');
 const docsId = await optionsPage.locator('.group-card').last().getAttribute('data-id');
@@ -590,6 +596,110 @@ r = await openGroupMsg('start', W3);
 check('List order: a group further up goes in front of the later one', r?.ok && (await stripOrder(W3)) === '- Start Tools', await stripOrder(W3));
 r = await openGroupMsg('paused', W3);
 check('List order: … and between its neighbours', r?.ok && (await stripOrder(W3)) === '- Start Paused Tools', await stripOrder(W3));
+
+// ---------- Categories ----------
+// “Wiki” exists in two categories (same title in the tab strip, told apart by color),
+// “Tool” shows its category in the title.
+await sw.evaluate(async (P) => {
+  await chrome.storage.sync.clear();
+  const g = (name, category, color, host, extra = {}) => ({
+    name, category, color, patterns: [host + P], openUrls: [`${host}${P}/start`], enabled: true, showCategory: false, ...extra,
+  });
+  await chrome.storage.sync.set({
+    settings: {
+      enabled: true, ungroupOnLeave: false, openInListOrder: true, order: ['wa', 'wb', 'tool'],
+      categories: [{ id: 'ca', name: 'Alpha' }, { id: 'cb', name: 'Beta' }],
+    },
+    'group:wa': g('Wiki', 'ca', 'blue', 'wiki-a.test'),
+    'group:wb': g('Wiki', 'cb', 'red', 'wiki-b.test'),
+    'group:tool': g('Tool', 'cb', 'green', 'tool.test', { showCategory: true }),
+  });
+}, PORT_SUFFIX);
+await sleep(400);
+await optionsPage.bringToFront();
+await optionsPage.reload();
+await optionsPage.waitForSelector('.cat-section .cat-head');
+const catNames = await optionsPage.$$eval('.cat-section .cat-name', (els) => els.map((e) => e.value));
+check('Categories: one section per category', catNames.join() === 'Alpha,Beta', catNames.join());
+check('Categories: same name in two categories is not an error', (await optionsPage.locator('.name-issues .note.error').count()) === 0);
+
+const W4 = await sw.evaluate(async (url) => (await chrome.windows.create({ url })).id, U('other.test/cat'));
+await sleep(600);
+const inW4 = (url) => sw.evaluate(async ({ url, w }) => (await chrome.tabs.create({ windowId: w, url, active: false })).id, { url, w: W4 });
+const wa = await inW4(U('wiki-a.test/x'));
+const wb = await inW4(U('wiki-b.test/x'));
+const tool = await inW4(U('tool.test/x'));
+const waInfo = await waitGroup(wa, 'Wiki');
+const wbInfo = await waitGroup(wb, 'Wiki');
+check(
+  'Categories: equal titles land in separate groups (by color)',
+  waInfo?.color === 'blue' && wbInfo?.color === 'red' && waInfo.groupId !== wbInfo.groupId,
+  JSON.stringify({ waInfo, wbInfo }),
+);
+check('Categories: title with category prefix', (await waitGroup(tool, 'Beta · Tool'))?.color === 'green');
+
+await optionsPage.locator('.cat-section').nth(1).locator('.cat-name').fill('Bee');
+await optionsPage.click('#save');
+check('Categories: renaming a category renames the open group', await waitGroup(tool, 'Bee · Tool'));
+
+const W5 = await sw.evaluate(async (url) => (await chrome.windows.create({ url })).id, U('other.test/cat2'));
+await sleep(600);
+r = await optionsPage.evaluate((w) => chrome.runtime.sendMessage({ type: 'openCategory', categoryId: 'cb', windowId: w }), W5);
+const w5Titles = await sw.evaluate(async (w) => {
+  const titles = Object.fromEntries((await chrome.tabGroups.query({ windowId: w })).map((g) => [g.id, g.title]));
+  return (await chrome.tabs.query({ windowId: w })).sort((a, b) => a.index - b.index).map((t) => titles[t.groupId] ?? '-');
+}, W5);
+check('Categories: “Open all” opens every group of the category in order', r?.ok && w5Titles.join() === '-,Wiki,Bee · Tool', JSON.stringify({ r, w5Titles }));
+
+// Collapsing: a single card, then all categories at once
+await optionsPage.bringToFront();
+const firstCard = optionsPage.locator('.group-card').first();
+await firstCard.locator('[data-action="fold"]').click();
+const cardFolded = !(await firstCard.locator('.card-body').isVisible());
+await firstCard.locator('[data-action="fold"]').click();
+check('Collapsing: a group card folds and unfolds', cardFolded && (await firstCard.locator('.card-body').isVisible()));
+await optionsPage.click('#collapse-all');
+const allFolded = (await optionsPage.locator('.cat-section.is-collapsed').count()) === 2 && !(await firstCard.isVisible());
+await optionsPage.click('#collapse-all');
+check('Collapsing: “Collapse all” folds and unfolds every category', allFolded && (await firstCard.isVisible()));
+const cat0 = optionsPage.locator('.cat-section').first();
+await cat0.locator('[data-cat-action="fold-cards"]').click();
+const cardsFolded = (await cat0.locator('.group-card.is-collapsed').count()) === (await cat0.locator('.group-card').count());
+await cat0.locator('[data-cat-action="fold-cards"]').click();
+check(
+  'Collapsing: one button folds and unfolds all groups of a category',
+  cardsFolded && (await cat0.locator('.group-card.is-collapsed').count()) === 0,
+);
+
+// Deleting a category (all collapsed): its groups join the category above, which stays collapsed – the last category stays
+await optionsPage.click('#collapse-all');
+await optionsPage.locator('.cat-section').nth(1).locator('[data-cat-action="delete"]').click();
+const merged = await optionsPage.$$eval('.cat-section', (els) =>
+  els.map((s) => `${s.querySelector('.cat-name').value}:${s.querySelectorAll('.group-card').length}:${s.classList.contains('is-collapsed')}`),
+);
+check(
+  'Categories: deleting one moves its groups to the neighbour (still collapsed), the last one can’t be deleted',
+  merged.join() === 'Alpha:3:true' && (await optionsPage.locator('[data-cat-action="delete"]').isDisabled()),
+  merged.join(),
+);
+check('Categories: …a name that now exists twice in the category is reported', (await optionsPage.locator('.name-issues .note.error').count()) === 1);
+await optionsPage.click('#discard');
+await optionsPage.click('#collapse-all'); // expand again
+
+// Reset: back to the start – takes effect only with “Save”
+await optionsPage.click('#reset');
+await optionsPage.click('#reset-dialog button[value="reset"]');
+await waitFor(async () => (await optionsPage.locator('.group-card').count()) === 0, 3000); // the dialog closes asynchronously
+const afterReset = await optionsPage.$$eval('.cat-section .cat-name', (els) => els.map((e) => e.value));
+check(
+  'Reset: only “Default” and no groups are left – not saved yet',
+  (await optionsPage.locator('.group-card').count()) === 0 &&
+    afterReset.join() === 'Default' &&
+    (await optionsPage.locator('#savebar.is-visible').count()) === 1,
+  afterReset.join(),
+);
+await optionsPage.click('#discard');
+check('Reset: “Discard” brings everything back', (await optionsPage.locator('.group-card').count()) === 3);
 
 // ---------- Service worker warnings ----------
 const logs = (await sw.evaluate(() => self.__logs)) ?? ['(log hook lost – service worker restarted?)'];

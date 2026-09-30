@@ -48,6 +48,30 @@ html body {
   cursor: pointer;
 }
 .launch-row:hover { background: var(--surface-2); }
+/* Categories: one tinted block each – heading with folder icon, its groups inside */
+.launch-list:has(> .launch-block) { gap: 8px; }
+.launch-block {
+  padding: 0 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.launch-cat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 6px 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.launch-cat svg { width: 15px; height: 15px; flex: none; color: var(--text-2); }
+.launch-cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.launch-all { font-size: 12.5px; flex: none; }
+.launch-sublist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.launch-block .launch-row { padding: 7px 6px; }
+.launch-block .launch-row:hover { background: var(--surface); }
+.launch-all:disabled { opacity: 0.6; cursor: progress; }
 .launch-row:disabled { opacity: 0.6; cursor: progress; }
 .launch-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .launch-head .chip { max-width: 170px; }
@@ -97,6 +121,8 @@ html body {
 }
 .status { display: grid; gap: 6px; margin-top: 8px; font-size: 13px; }
 .status-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.status-cat { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.status-cat svg { width: 14px; height: 14px; color: var(--text-2); }
 .status code { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .small { font-size: 12px; }
 

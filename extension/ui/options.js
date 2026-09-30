@@ -8,6 +8,10 @@ import {
   toExport,
   fromImport,
   mergeImport,
+  normalizeConfig,
+  sortBySection,
+  categoryName,
+  groupTitle,
 } from '../lib/config.js';
 import { compileGroups, explainMatch, urlsToOpen, shortUrl } from '../lib/patterns.js';
 import { h, icon, chip, swatches, note, toast } from './dom.js';
@@ -16,8 +20,9 @@ const $ = (selector) => document.querySelector(selector);
 
 const els = {
   groups: $('#groups'),
-  empty: $('#empty'),
+  collapseAll: $('#collapse-all'),
   addGroup: $('#add-group'),
+  addCategory: $('#add-category'),
   testUrl: $('#test-url'),
   testResult: $('#test-result'),
   setEnabled: $('#set-enabled'),
@@ -29,6 +34,8 @@ const els = {
   importFile: $('#import-file'),
   importDialog: $('#import-dialog'),
   importSummary: $('#import-summary'),
+  resetBtn: $('#reset'),
+  resetDialog: $('#reset-dialog'),
   savebar: $('#savebar'),
   savebarText: $('#savebar-text'),
   save: $('#save'),
@@ -38,7 +45,7 @@ const els = {
 };
 
 /** Last saved state and working copy */
-let saved = { settings: { enabled: true, ungroupOnLeave: false, openInListOrder: false }, groups: [] };
+let saved = normalizeConfig({ settings: {}, groups: [] });
 let draft = clone(saved);
 let validation = validateConfig(draft);
 let saving = false;
@@ -47,21 +54,39 @@ function clone(value) {
   return structuredClone(value);
 }
 
-function normalized(config) {
-  return {
-    settings: {
-      enabled: config.settings.enabled !== false,
-      ungroupOnLeave: !!config.settings.ungroupOnLeave,
-      openInListOrder: !!config.settings.openInListOrder,
-    },
-    groups: config.groups.map(normalizeGroup),
-  };
-}
-
+const normalized = (config) => normalizeConfig(config);
 const sameConfig = (a, b) => JSON.stringify(normalized(a)) === JSON.stringify(normalized(b));
 const isDirty = () => !sameConfig(draft, saved);
 const findGroup = (id) => draft.groups.find((g) => g.id === id);
+const findCategory = (id) => draft.categories.find((c) => c.id === id);
+const titleOf = (group) => groupTitle(group, draft.categories);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/** Keeps the groups ordered section by section – the order decides which group wins. */
+function resort() {
+  draft.groups = sortBySection(draft.groups, draft.categories);
+}
+
+/* Collapsed categories and group cards (only on this device, only a view setting) */
+function loadIds(key) {
+  try {
+    const ids = JSON.parse(localStorage.getItem(key));
+    return new Set(Array.isArray(ids) ? ids : []);
+  } catch {
+    return new Set();
+  }
+}
+function storeIds(key, ids) {
+  try {
+    localStorage.setItem(key, JSON.stringify([...ids]));
+  } catch {
+    /* only a convenience */
+  }
+}
+const collapsed = loadIds('collapsedCategories');
+const collapsedCards = loadIds('collapsedGroups');
+const storeCollapsed = () => storeIds('collapsedCategories', collapsed);
+const storeCollapsedCards = () => storeIds('collapsedGroups', collapsedCards);
 
 /* ---------- Rendering ---------- */
 
@@ -73,11 +98,123 @@ function renderAll() {
   refresh();
 }
 
+/** One section per category, each with a head – every group belongs to a category. */
 function renderGroups() {
-  const total = draft.groups.length;
-  els.groups.replaceChildren(...draft.groups.map((group, index) => groupCard(group, index, total)));
-  els.empty.hidden = total > 0;
-  els.groups.querySelectorAll('textarea').forEach(autoGrow);
+  const noGroups = !draft.groups.length;
+  const sections = draft.categories.map((category, sectionIndex) => {
+    const groups = draft.groups.filter((g) => g.category === category.id);
+    const list = h(
+      'ol',
+      { class: 'groups', dataset: { category: category.id }, 'aria-label': category.name || 'Unnamed category' },
+      groups.map((group, i) => groupCard(group, { index: draft.groups.indexOf(group), first: i === 0, last: i === groups.length - 1 })),
+      h(
+        'li',
+        { class: 'cat-empty' },
+        noGroups
+          ? [
+              h('p', { class: 'empty-title' }, 'No groups yet'),
+              h('p', {}, 'Add a group, give it a name and a color, and enter the URLs that belong in it.'),
+            ]
+          : 'No groups in this category yet – drag a group here, or choose this category in a group.',
+      ),
+    );
+    return h(
+      'section',
+      { class: `cat-section${collapsed.has(category.id) ? ' is-collapsed' : ''}`, dataset: { category: category.id } },
+      categoryHead(category, sectionIndex),
+      h('div', { class: 'issues cat-issues' }),
+      list,
+    );
+  });
+  els.groups.replaceChildren(...sections);
+  els.groups.querySelectorAll('.cat-section:not(.is-collapsed) .group-card:not(.is-collapsed) textarea').forEach(autoGrow);
+}
+
+/** A chevron button that collapses/expands a category or a group card. */
+function toggleButton(expanded, name, dataset) {
+  return h(
+    'button',
+    {
+      type: 'button',
+      class: 'icon-btn fold',
+      title: expanded ? 'Collapse' : 'Expand',
+      'aria-label': `${expanded ? 'Collapse' : 'Expand'} “${name}”`,
+      'aria-expanded': String(expanded),
+      dataset,
+    },
+    icon('chevron'),
+  );
+}
+
+function categoryHead(category, index) {
+  const id = category.id;
+  const button = (iconName, label, action, { disabled = false, extraClass = '' } = {}) =>
+    h(
+      'button',
+      { type: 'button', class: `icon-btn ${extraClass}`.trim(), title: label, 'aria-label': label, disabled, dataset: { catAction: action } },
+      icon(iconName),
+    );
+  const only = draft.categories.length === 1;
+  return h(
+    'div',
+    { class: 'cat-head' },
+    toggleButton(!collapsed.has(id), category.name || 'Unnamed category', { catAction: 'toggle' }),
+    h('span', { class: 'cat-icon', title: 'Category', 'aria-hidden': 'true' }, icon('folder')),
+    h('input', {
+      class: 'input cat-name',
+      type: 'text',
+      value: category.name,
+      maxlength: '40',
+      autocomplete: 'off',
+      placeholder: 'Name of the category',
+      'aria-label': 'Name of the category',
+    }),
+    h('span', { class: 'cat-count' }),
+    h(
+      'div',
+      { class: 'cat-tools' },
+      h(
+        'label',
+        { class: 'switch compact', title: 'Turn all groups of this category on or off' },
+        h('input', { type: 'checkbox', class: 'cat-enabled' }),
+        h('span', { class: 'track', 'aria-hidden': 'true' }),
+        h('span', { class: 'switch-label' }),
+      ),
+      h('button', { type: 'button', class: 'btn small', dataset: { catAction: 'open' } }, icon('launch'), 'Open all'),
+      h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
+      button('foldAll', 'Collapse all groups of this category', 'fold-cards'),
+      button('plus', 'Add a group to this category', 'add'),
+      button('up', 'Move category up', 'up', { disabled: index === 0 }),
+      button('down', 'Move category down', 'down', { disabled: index === draft.categories.length - 1 }),
+      button('trash', only ? 'The last category can’t be deleted' : 'Delete category', 'delete', {
+        disabled: only,
+        extraClass: 'danger',
+      }),
+    ),
+  );
+}
+
+/** Count, on/off switch and “Open all” of a category head follow the groups. */
+function updateCategoryHead(section) {
+  const head = section.querySelector('.cat-head');
+  if (!head) return;
+  const groups = draft.groups.filter((g) => g.category === section.dataset.category);
+  const active = groups.filter((g) => g.enabled).length;
+  const toggle = head.querySelector('.cat-enabled');
+  toggle.checked = groups.length > 0 && active === groups.length;
+  toggle.indeterminate = active > 0 && active < groups.length;
+  toggle.closest('.switch').hidden = !groups.length; // nothing to turn on or off
+  head.querySelector('.switch-label').textContent = !active ? 'Paused' : active === groups.length ? 'Active' : 'Mixed';
+  head.querySelector('.cat-count').textContent = plural(groups.length, 'group', 'groups');
+  head.querySelector('[data-cat-action="open"]').disabled = !groups.some((g) => g.name.trim() && urlsToOpen(g).urls.length);
+  // One button collapses all cards of the category – or, if all are collapsed, expands them
+  const anyOpen = groups.some((g) => !collapsedCards.has(g.id));
+  const label = `${anyOpen ? 'Collapse' : 'Expand'} all groups of this category`;
+  const foldCards = head.querySelector('[data-cat-action="fold-cards"]');
+  foldCards.replaceChildren(icon(anyOpen ? 'foldAll' : 'unfoldAll'));
+  foldCards.title = label;
+  foldCards.setAttribute('aria-label', label);
+  foldCards.disabled = !groups.length;
 }
 
 function iconButton(iconName, label, action, { disabled = false, extraClass = '' } = {}) {
@@ -92,20 +229,44 @@ function preview(group) {
   return h(
     'div',
     { class: 'preview', dataset: { color: group.color }, 'aria-hidden': 'true' },
-    chip(group.name, group.color),
+    chip(titleOf(group), group.color),
     h('span', { class: 'ghost-tab' }),
     h('span', { class: 'ghost-tab' }),
   );
 }
 
-function groupCard(group, index, total) {
+function categoryField(group) {
   const id = group.id;
+  return [
+    h('label', { class: 'field-label', for: `category-${id}` }, 'Category'),
+    h(
+      'div',
+      { class: 'field category-field' },
+      h(
+        'select',
+        { class: 'select category', id: `category-${id}` },
+        draft.categories.map((c) => h('option', { value: c.id, selected: c.id === group.category }, c.name || 'Unnamed category')),
+      ),
+      h(
+        'label',
+        { class: 'check' },
+        h('input', { type: 'checkbox', class: 'show-category', checked: group.showCategory }),
+        'Show the category in the tab title',
+      ),
+    ),
+  ];
+}
+
+function groupCard(group, { index, first, last }) {
+  const id = group.id;
+  const folded = collapsedCards.has(id);
   return h(
     'li',
-    { class: `group-card${group.enabled ? '' : ' is-disabled'}`, dataset: { id } },
+    { class: `group-card${group.enabled ? '' : ' is-disabled'}${folded ? ' is-collapsed' : ''}`, dataset: { id } },
     h(
       'div',
       { class: 'card-head', draggable: 'true' },
+      toggleButton(!folded, group.name || 'Unnamed', { action: 'fold' }),
       h('span', { class: 'drag-handle', title: 'Drag to change the order' }, icon('grip')),
       h('span', { class: 'order', title: `Priority ${index + 1}` }, String(index + 1)),
       preview(group),
@@ -120,8 +281,8 @@ function groupCard(group, index, total) {
           h('span', { class: 'switch-label' }, group.enabled ? 'Active' : 'Paused'),
         ),
         h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
-        iconButton('up', 'Move up', 'up', { disabled: index === 0 }),
-        iconButton('down', 'Move down', 'down', { disabled: index === total - 1 }),
+        iconButton('up', 'Move up', 'up', { disabled: first }),
+        iconButton('down', 'Move down', 'down', { disabled: last }),
         iconButton('trash', 'Delete group', 'delete', { extraClass: 'danger' }),
       ),
     ),
@@ -143,6 +304,7 @@ function groupCard(group, index, total) {
         }),
         h('div', { class: 'issues name-issues' }),
       ),
+      categoryField(group),
       h('span', { class: 'field-label', id: `color-label-${id}` }, 'Color'),
       h('div', { class: 'field' }, swatches(`color-${id}`, group.color, { label: 'Color' })),
       h(
@@ -217,16 +379,28 @@ function renderOpenPreview(card, group) {
 /** Update errors/hints, test result and save bar */
 function refresh() {
   validation = validateConfig(draft);
-  for (const card of els.groups.children) {
+  for (const section of els.groups.querySelectorAll('.cat-section')) {
+    updateCategoryHead(section);
+    const error = validation.categoryErrors.get(section.dataset.category);
+    section.querySelector('.cat-name')?.setAttribute('aria-invalid', String(!!error));
+    section.querySelector('.cat-issues')?.replaceChildren(...(error ? [note('error', error)] : []));
+  }
+  for (const card of els.groups.querySelectorAll('.group-card')) {
     const item = validation.report.get(card.dataset.id);
     if (!item) continue;
+    const group = findGroup(card.dataset.id);
+    card.querySelector('.chip').replaceWith(chip(titleOf(group), group.color));
+    card.classList.toggle('has-errors', !!(item.nameError || item.patternErrors.length || item.openErrors.length));
     const nameInput = card.querySelector('.name');
     const textarea = card.querySelector('.patterns');
     const openArea = card.querySelector('.open-urls');
     nameInput.setAttribute('aria-invalid', String(!!item.nameError));
     textarea.setAttribute('aria-invalid', String(item.patternErrors.length > 0));
     openArea.setAttribute('aria-invalid', String(item.openErrors.length > 0));
-    card.querySelector('.name-issues').replaceChildren(...(item.nameError ? [note('error', item.nameError)] : []));
+    card.querySelector('.name-issues').replaceChildren(
+      ...(item.nameError ? [note('error', item.nameError)] : []),
+      ...(item.titleWarning ? [note('warn', item.titleWarning)] : []),
+    );
     card.querySelector('.pattern-issues').replaceChildren(
       ...item.patternErrors.map((e) => note('error', `Line ${e.index + 1} “${e.line}”: ${e.message}`)),
       ...item.warnings.map((w) => note('warn', w)),
@@ -236,6 +410,7 @@ function refresh() {
     );
     renderOpenPreview(card, findGroup(card.dataset.id));
   }
+  updateCollapseAll();
   renderTest();
   updateSavebar();
 }
@@ -272,7 +447,10 @@ function renderTest() {
         'div',
         { class: 'test-hit' },
         h('span', { class: 'muted' }, 'Goes to'),
-        chip(group.name, group.color),
+        chip(titleOf(group), group.color),
+        group.category && !group.showCategory
+          ? h('span', { class: 'muted' }, `(${categoryName(draft.categories, group.category) || 'Unnamed category'})`)
+          : null,
         h('span', { class: 'muted' }, 'via the pattern'),
         h('code', {}, pattern),
       ),
@@ -297,13 +475,21 @@ function autoGrow(textarea) {
 /* ---------- Editing ---------- */
 
 els.groups.addEventListener('input', (event) => {
+  if (event.target.matches('.cat-name')) {
+    const id = event.target.closest('.cat-section').dataset.category;
+    findCategory(id).name = event.target.value;
+    for (const option of els.groups.querySelectorAll(`select.category option[value="${id}"]`)) {
+      option.textContent = event.target.value.trim() || 'Unnamed category';
+    }
+    refresh();
+    return;
+  }
   const card = event.target.closest('.group-card');
   const group = card && findGroup(card.dataset.id);
   if (!group) return;
 
   if (event.target.matches('.name')) {
     group.name = event.target.value;
-    card.querySelector('.chip').replaceWith(chip(group.name, group.color));
   } else if (event.target.matches('.patterns')) {
     group.patterns = event.target.value.split('\n');
     autoGrow(event.target);
@@ -314,7 +500,78 @@ els.groups.addEventListener('input', (event) => {
   refresh();
 });
 
+const cardOf = (id) => els.groups.querySelector(`.group-card[data-id="${id}"]`);
+const sectionOf = (id) => [...els.groups.querySelectorAll('.cat-section')].find((s) => s.dataset.category === id);
+
+/* ---------- Collapsing (categories and group cards) ---------- */
+
+/** Shows a category section or a group card collapsed or expanded. */
+function setFolded(element, folded) {
+  element.classList.toggle('is-collapsed', folded);
+  const button = element.querySelector(':scope > .cat-head > .fold, :scope > .card-head > .fold');
+  if (button) {
+    button.setAttribute('aria-expanded', String(!folded));
+    button.title = folded ? 'Expand' : 'Collapse';
+    button.setAttribute('aria-label', button.getAttribute('aria-label').replace(/^\S+/, folded ? 'Expand' : 'Collapse'));
+  }
+  // Textareas that were hidden have no height yet
+  if (!folded) element.querySelectorAll('textarea').forEach((t) => t.offsetParent && autoGrow(t));
+}
+
+/** Briefly highlights a category – e.g. when groups were moved into it while it's collapsed. */
+function flash(section) {
+  if (!section) return;
+  section.classList.remove('is-flashing');
+  void section.offsetWidth; // restart the animation
+  section.classList.add('is-flashing');
+  section.addEventListener('animationend', () => section.classList.remove('is-flashing'), { once: true });
+}
+
+function expandCategory(id) {
+  if (!collapsed.delete(id)) return;
+  storeCollapsed();
+  const section = sectionOf(id);
+  if (section) setFolded(section, false);
+  updateCollapseAll();
+}
+
+function expandCard(id) {
+  if (!collapsedCards.delete(id)) return;
+  storeCollapsedCards();
+  const card = cardOf(id);
+  if (!card) return;
+  setFolded(card, false);
+  updateCategoryHead(card.closest('.cat-section'));
+}
+
+/** The button above the list: collapses all categories – or, if all are collapsed, expands them. */
+function updateCollapseAll() {
+  const anyOpen = draft.categories.some((c) => !collapsed.has(c.id));
+  els.collapseAll.replaceChildren(icon('chevron'), anyOpen ? 'Collapse all' : 'Expand all');
+  els.collapseAll.classList.toggle('is-folded', !anyOpen);
+  els.collapseAll.setAttribute('aria-label', `${anyOpen ? 'Collapse' : 'Expand'} all categories`);
+}
+
+els.collapseAll.addEventListener('click', () => {
+  const fold = draft.categories.some((c) => !collapsed.has(c.id));
+  for (const c of draft.categories) {
+    if (fold) collapsed.add(c.id);
+    else collapsed.delete(c.id);
+  }
+  storeCollapsed();
+  for (const section of els.groups.querySelectorAll('.cat-section')) setFolded(section, fold);
+  updateCollapseAll();
+});
+
 els.groups.addEventListener('change', (event) => {
+  if (event.target.matches('.cat-enabled')) {
+    const id = event.target.closest('.cat-section').dataset.category;
+    for (const g of draft.groups) if (g.category === id) g.enabled = event.target.checked;
+    renderGroups();
+    refresh();
+    sectionOf(id)?.querySelector('.cat-enabled').focus();
+    return;
+  }
   const card = event.target.closest('.group-card');
   const group = card && findGroup(card.dataset.id);
   if (!group) return;
@@ -322,16 +579,35 @@ els.groups.addEventListener('change', (event) => {
   if (event.target.matches('input[type="radio"]')) {
     group.color = event.target.value;
     card.querySelector('.preview').dataset.color = group.color;
-    card.querySelector('.chip').dataset.color = group.color;
   } else if (event.target.matches('.enabled')) {
     group.enabled = event.target.checked;
     card.classList.toggle('is-disabled', !group.enabled);
     card.querySelector('.switch-label').textContent = group.enabled ? 'Active' : 'Paused';
+  } else if (event.target.matches('.show-category')) {
+    group.showCategory = event.target.checked;
+  } else if (event.target.matches('select.category')) {
+    // Into the other category – at its end
+    group.category = event.target.value;
+    draft.groups.splice(draft.groups.indexOf(group), 1);
+    draft.groups.push(group);
+    resort();
+    expandCategory(group.category);
+    renderGroups();
+    refresh();
+    const moved = cardOf(group.id);
+    moved.querySelector('select.category').focus({ preventScroll: true });
+    moved.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return;
   }
   refresh();
 });
 
 els.groups.addEventListener('click', (event) => {
+  const catButton = event.target.closest('button[data-cat-action]');
+  if (catButton) {
+    categoryAction(catButton);
+    return;
+  }
   const button = event.target.closest('button[data-action]');
   if (!button) return;
   const card = button.closest('.group-card');
@@ -339,14 +615,25 @@ els.groups.addEventListener('click', (event) => {
   if (index === -1) return;
   const action = button.dataset.action;
 
+  if (action === 'fold') {
+    const folded = !collapsedCards.has(card.dataset.id);
+    if (folded) collapsedCards.add(card.dataset.id);
+    else collapsedCards.delete(card.dataset.id);
+    storeCollapsedCards();
+    setFolded(card, folded);
+    updateCategoryHead(card.closest('.cat-section'));
+    return;
+  }
+
   if (action === 'up' || action === 'down') {
+    // Within the category – the neighbour in the same section
+    const group = draft.groups[index];
     const target = action === 'up' ? index - 1 : index + 1;
-    if (target < 0 || target >= draft.groups.length) return;
-    const [group] = draft.groups.splice(index, 1);
-    draft.groups.splice(target, 0, group);
+    if (draft.groups[target]?.category !== group.category) return;
+    [draft.groups[index], draft.groups[target]] = [draft.groups[target], draft.groups[index]];
     renderGroups();
     refresh();
-    const moved = els.groups.querySelector(`[data-id="${group.id}"]`);
+    const moved = cardOf(group.id);
     const sameButton = moved.querySelector(`button[data-action="${action}"]`);
     (sameButton.disabled ? moved.querySelector('.name') : sameButton).focus();
     moved.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -361,11 +648,91 @@ els.groups.addEventListener('click', (event) => {
     const [removed] = draft.groups.splice(index, 1);
     renderGroups();
     refresh();
-    const next = els.groups.children[Math.min(index, draft.groups.length - 1)];
+    const cards = els.groups.querySelectorAll('.group-card');
+    const next = cards[Math.min(index, cards.length - 1)];
     (next?.querySelector('.name') ?? els.addGroup).focus();
     toast(`“${removed.name || 'Unnamed'}” removed – click “Discard” to undo.`);
   }
 });
+
+function categoryAction(button) {
+  const section = button.closest('.cat-section');
+  const id = section.dataset.category;
+  const index = draft.categories.findIndex((c) => c.id === id);
+  const action = button.dataset.catAction;
+
+  if (action === 'toggle') {
+    const folded = !collapsed.has(id);
+    if (folded) collapsed.add(id);
+    else collapsed.delete(id);
+    storeCollapsed();
+    setFolded(section, folded);
+    updateCollapseAll();
+    return;
+  }
+
+  if (action === 'open') {
+    openCategoryNow(id, button);
+    return;
+  }
+
+  if (action === 'add') {
+    addGroup(id);
+    return;
+  }
+
+  if (action === 'fold-cards') {
+    const ids = draft.groups.filter((g) => g.category === id).map((g) => g.id);
+    const fold = ids.some((groupId) => !collapsedCards.has(groupId));
+    for (const groupId of ids) {
+      if (fold) collapsedCards.add(groupId);
+      else collapsedCards.delete(groupId);
+    }
+    storeCollapsedCards();
+    if (!fold) expandCategory(id); // expanding the groups also shows a collapsed category
+    for (const card of section.querySelectorAll('.group-card')) setFolded(card, fold);
+    updateCategoryHead(section);
+    return;
+  }
+
+  if (action === 'up' || action === 'down') {
+    const target = action === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= draft.categories.length) return;
+    [draft.categories[index], draft.categories[target]] = [draft.categories[target], draft.categories[index]];
+    resort();
+    renderGroups();
+    refresh();
+    const sameButton = sectionOf(id).querySelector(`button[data-cat-action="${action}"]`);
+    (sameButton.disabled ? sectionOf(id).querySelector('.fold') : sameButton).focus();
+    sectionOf(id).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return;
+  }
+
+  if (action === 'delete') {
+    // Every group needs a category: its groups join the neighbouring category.
+    // Above → at its end, below → at its start – so the order stays the same.
+    if (draft.categories.length === 1) return;
+    const target = draft.categories[index - 1] ?? draft.categories[index + 1];
+    const [removed] = draft.categories.splice(index, 1);
+    const moved = draft.groups.filter((g) => g.category === id);
+    for (const g of moved) g.category = target.id;
+    resort();
+    collapsed.delete(id);
+    storeCollapsed();
+    renderGroups();
+    refresh();
+    // A collapsed target stays collapsed – it's only highlighted briefly
+    sectionOf(target.id).querySelector('.fold').focus();
+    if (moved.length) flash(sectionOf(target.id));
+    toast(
+      `Category “${removed.name || 'Unnamed'}” removed` +
+        (moved.length
+          ? ` – its ${plural(moved.length, 'group was', 'groups were')} moved to “${target.name || 'Unnamed category'}”`
+          : '') +
+        '. Click “Discard” to undo.',
+    );
+  }
+}
 
 /* ---------- Drag and drop (the card head is the handle) ---------- */
 
@@ -381,13 +748,19 @@ els.groups.addEventListener('dragstart', (event) => {
   requestAnimationFrame(() => dragged?.classList.add('is-dragging')); // after the drag image was taken
 });
 
-// The card moves along while dragging: before/after the card under the pointer, depending on its half
+// The card moves along while dragging: before/after the card under the pointer, depending on its half.
+// Over a category head or an empty category it goes into that category.
 document.addEventListener('dragover', (event) => {
   if (!dragged) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
-  const over = event.target.closest?.('.group-card');
+  const over = event.target.closest?.('.group-card, .cat-head, .cat-empty');
   if (!over || over === dragged) return;
+  if (!over.matches('.group-card')) {
+    const list = over.closest('.cat-section').querySelector('.groups');
+    if (list.firstElementChild !== dragged) list.prepend(dragged);
+    return;
+  }
   const { top, height } = over.getBoundingClientRect();
   if (event.clientY > top + height / 2) {
     if (over.nextElementSibling !== dragged) over.after(dragged);
@@ -407,23 +780,51 @@ els.groups.addEventListener('dragend', () => {
   const { id } = dragged.dataset;
   dragged = null;
   if (dropped) {
-    const order = [...els.groups.children].map((card) => card.dataset.id);
+    const cards = [...els.groups.querySelectorAll('.group-card')];
+    for (const card of cards) findGroup(card.dataset.id).category = card.closest('.cat-section').dataset.category;
+    const order = cards.map((card) => card.dataset.id);
     draft.groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    resort();
   }
   renderGroups(); // cancelled (Esc) → back to the previous order
   refresh();
-  els.groups.querySelector(`[data-id="${id}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const card = cardOf(id);
+  if (card?.offsetParent) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  else if (dropped) flash(card?.closest('.cat-section')); // dropped onto a collapsed category – it stays collapsed
 });
 
-els.addGroup.append(icon('plus'), 'Add group');
-els.addGroup.addEventListener('click', () => {
-  const group = normalizeGroup({ id: newId(), name: '', color: nextFreeColor(draft.groups), patterns: [] });
+/** New, empty group at the end of a category. */
+function addGroup(categoryId) {
+  const group = normalizeGroup({
+    id: newId(),
+    name: '',
+    color: nextFreeColor(draft.groups),
+    patterns: [],
+    category: categoryId,
+  });
   draft.groups.push(group);
+  resort();
+  collapsed.delete(categoryId);
+  storeCollapsed();
   renderGroups();
   refresh();
-  const card = els.groups.lastElementChild;
+  const card = cardOf(group.id);
   card.scrollIntoView({ block: 'center', behavior: 'smooth' });
   card.querySelector('.name').focus({ preventScroll: true });
+}
+
+els.addGroup.append(icon('plus'), 'Add group');
+els.addGroup.addEventListener('click', () => addGroup(draft.categories.at(-1).id)); // at the bottom, next to the button
+
+els.addCategory.append(icon('folder'), 'Add category');
+els.addCategory.addEventListener('click', () => {
+  const category = { id: newId(), name: '' };
+  draft.categories.push(category);
+  renderGroups();
+  refresh();
+  const section = sectionOf(category.id);
+  section.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  section.querySelector('.cat-name').focus({ preventScroll: true });
 });
 
 els.setEnabled.addEventListener('change', () => {
@@ -447,7 +848,13 @@ async function save() {
   refresh();
   if (!validation.ok) {
     toast('Please fix the errors marked in red first.', 'error');
-    els.groups.querySelector('[aria-invalid="true"]')?.focus();
+    const invalid = els.groups.querySelector('[aria-invalid="true"]');
+    if (invalid) {
+      expandCategory(invalid.closest('.cat-section').dataset.category);
+      const card = invalid.closest('.group-card');
+      if (card) expandCard(card.dataset.id);
+    }
+    invalid?.focus();
     return false;
   }
   saving = true;
@@ -507,6 +914,27 @@ async function openGroupNow(groupId, button) {
   }
 }
 
+async function openCategoryNow(categoryId, button) {
+  if (isDirty() && !(await save())) return;
+  button.disabled = true;
+  try {
+    const win = await chrome.windows.getCurrent();
+    const result = await chrome.runtime.sendMessage({ type: 'openCategory', categoryId, windowId: win.id });
+    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
+    const parts = [
+      plural(result.groups, 'group', 'groups'),
+      result.opened ? `${plural(result.opened, 'page', 'pages')} opened` : 'all pages were already open',
+    ];
+    if (result.failed?.length) parts.push(`could not open: ${result.failed.map(shortUrl).join(', ')}`);
+    toast(`“${result.name}”: ${parts.join(' – ')}`, result.failed?.length ? 'error' : 'ok');
+  } catch (err) {
+    toast(`Opening failed: ${err.message}`, 'error');
+  } finally {
+    button.disabled = false;
+    refresh();
+  }
+}
+
 /* ---------- Sort all tabs ---------- */
 
 els.sortAll.append(icon('sort'), 'Sort all tabs now');
@@ -541,15 +969,10 @@ els.exportBtn.addEventListener('click', () => {
 
 /** Asks whether the import adds to or replaces the current groups: 'add' | 'replace' | '' (cancelled). */
 function askImportMode(imported) {
-  const dialog = els.importDialog;
   els.importSummary.textContent =
     `The file contains ${plural(imported.groups.length, 'group', 'groups')}, ` +
     `you currently have ${plural(draft.groups.length, 'group', 'groups')}.`;
-  dialog.returnValue = ''; // Esc closes without a value
-  dialog.showModal();
-  return new Promise((resolve) => {
-    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
-  });
+  return ask(els.importDialog);
 }
 
 els.importBtn.append(icon('upload'), 'Import …');
@@ -584,6 +1007,30 @@ els.importFile.addEventListener('change', async () => {
   }
 });
 
+/* ---------- Reset ---------- */
+
+/** Resolves with the value of the button that closed the dialog ('' = Esc). */
+function ask(dialog) {
+  dialog.returnValue = '';
+  dialog.showModal();
+  return new Promise((resolve) => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
+  });
+}
+
+els.resetBtn.append(icon('trash'), 'Reset …');
+els.resetBtn.addEventListener('click', async () => {
+  if ((await ask(els.resetDialog)) !== 'reset') return;
+  // As right after installing: only “Default”, no groups, default options – takes effect with “Save”
+  draft = normalizeConfig({ settings: {}, groups: [] });
+  collapsed.clear();
+  collapsedCards.clear();
+  storeCollapsed();
+  storeCollapsedCards();
+  renderAll();
+  toast('Everything reset – click “Save” to apply it, or “Discard” to undo.');
+});
+
 /* ---------- Changes from elsewhere (popup, other device) ---------- */
 
 chrome.storage.onChanged.addListener(async (_changes, area) => {
@@ -611,6 +1058,11 @@ els.reload.addEventListener('click', async () => {
 async function init() {
   saved = await loadConfig();
   draft = clone(saved);
+  // Forget the collapsed state of categories/groups that no longer exist
+  for (const id of collapsed) if (!saved.categories.some((c) => c.id === id)) collapsed.delete(id);
+  for (const id of collapsedCards) if (!saved.groups.some((g) => g.id === id)) collapsedCards.delete(id);
+  storeCollapsed();
+  storeCollapsedCards();
   renderAll();
 }
 

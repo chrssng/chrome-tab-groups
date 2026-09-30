@@ -6,9 +6,11 @@
     "ungroupOnLeave": true,
     "openInListOrder": true
   },
+  "categories": ["Work", "Reading", "Default"],
   "groups": [
     {
       "name": "Issues & PRs",
+      "category": "Work",
       "color": "red",
       "patterns": [
         "# wildcards – must stay above “GitHub”, otherwise that group wins",
@@ -23,6 +25,7 @@
     },
     {
       "name": "GitHub",
+      "category": "Work",
       "color": "grey",
       "patterns": [
         "github.com"
@@ -31,28 +34,8 @@
       "enabled": true
     },
     {
-      "name": "Google",
-      "color": "blue",
-      "patterns": [
-        "google.com",
-        "!mail.google.com",
-        "!google.com/maps"
-      ],
-      "openUrls": [],
-      "enabled": true
-    },
-    {
-      "name": "Mail",
-      "color": "yellow",
-      "patterns": [
-        "mail.google.com",
-        "outlook.live.com"
-      ],
-      "openUrls": [],
-      "enabled": true
-    },
-    {
       "name": "Docs",
+      "category": "Work",
       "color": "cyan",
       "patterns": [
         "# path prefixes",
@@ -68,18 +51,8 @@
       "enabled": true
     },
     {
-      "name": "PDFs",
-      "color": "orange",
-      "patterns": [
-        "/\\.pdf([?#]|$)/i"
-      ],
-      "openUrls": [
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
-      ],
-      "enabled": true
-    },
-    {
       "name": "Local dev",
+      "category": "Work",
       "color": "green",
       "patterns": [
         "localhost:3000",
@@ -95,7 +68,22 @@
       "enabled": true
     },
     {
+      "name": "Docs",
+      "category": "Reading",
+      "showCategory": true,
+      "color": "blue",
+      "patterns": [
+        "# same name as in “Work” – the tab title shows the category: “Reading · Docs”",
+        "docs.google.com"
+      ],
+      "openUrls": [
+        "https://docs.google.com/document/u/0/"
+      ],
+      "enabled": true
+    },
+    {
       "name": "Wikipedia",
+      "category": "Reading",
       "color": "purple",
       "patterns": [
         "# with scheme – http:// does not match",
@@ -108,7 +96,20 @@
       "enabled": true
     },
     {
+      "name": "PDFs",
+      "category": "Reading",
+      "color": "orange",
+      "patterns": [
+        "/\\.pdf([?#]|$)/i"
+      ],
+      "openUrls": [
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+      ],
+      "enabled": true
+    },
+    {
       "name": "News",
+      "category": "Reading",
       "color": "pink",
       "patterns": [],
       "openUrls": [
@@ -118,6 +119,30 @@
         "https://www.tagesschau.de"
       ],
       "enabled": false
+    },
+    {
+      "name": "Google",
+      "category": "Default",
+      "color": "blue",
+      "patterns": [
+        "# catch-all, so its section is at the bottom: the more specific groups above win",
+        "google.com",
+        "!mail.google.com",
+        "!google.com/maps"
+      ],
+      "openUrls": [],
+      "enabled": true
+    },
+    {
+      "name": "Mail",
+      "category": "Default",
+      "color": "yellow",
+      "patterns": [
+        "mail.google.com",
+        "outlook.live.com"
+      ],
+      "openUrls": [],
+      "enabled": true
     }
   ]
 }

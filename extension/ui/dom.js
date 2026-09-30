@@ -43,6 +43,10 @@ const ICONS = {
   search: 'M11 18.5a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM20.5 20.5l-4.2-4.2',
   launch: 'M14 4h6v6M20 4l-8.5 8.5M18 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5.5',
   grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+  chevron: 'M6 9l6 6 6-6',
+  foldAll: 'M7 4l5 5 5-5M7 20l5-5 5 5', // chevrons pointing inwards
+  unfoldAll: 'M7 9l5-5 5 5M7 15l5 5 5-5', // chevrons pointing outwards
+  folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
 };
 
 export function icon(name) {
