@@ -1,0 +1,123 @@
+{
+  "format": "tab-groups-by-url",
+  "version": 1,
+  "settings": {
+    "enabled": true,
+    "ungroupOnLeave": true,
+    "openInListOrder": true
+  },
+  "groups": [
+    {
+      "name": "Issues & PRs",
+      "color": "red",
+      "patterns": [
+        "# wildcards – must stay above “GitHub”, otherwise that group wins",
+        "github.com/*/issues",
+        "github.com/*/pulls"
+      ],
+      "openUrls": [
+        "https://github.com/microsoft/vscode/issues",
+        "https://github.com/nodejs/node/pulls"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "GitHub",
+      "color": "grey",
+      "patterns": [
+        "github.com"
+      ],
+      "openUrls": [],
+      "enabled": true
+    },
+    {
+      "name": "Google",
+      "color": "blue",
+      "patterns": [
+        "google.com",
+        "!mail.google.com",
+        "!google.com/maps"
+      ],
+      "openUrls": [],
+      "enabled": true
+    },
+    {
+      "name": "Mail",
+      "color": "yellow",
+      "patterns": [
+        "mail.google.com",
+        "outlook.live.com"
+      ],
+      "openUrls": [],
+      "enabled": true
+    },
+    {
+      "name": "Docs",
+      "color": "cyan",
+      "patterns": [
+        "# path prefixes",
+        "developer.chrome.com/docs/extensions",
+        "developer.mozilla.org/*/docs",
+        "nodejs.org/docs"
+      ],
+      "openUrls": [
+        "https://developer.chrome.com/docs/extensions/reference/api/tabGroups",
+        "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+        "nodejs.org/docs/latest/api/"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "PDFs",
+      "color": "orange",
+      "patterns": [
+        "/\\.pdf([?#]|$)/i"
+      ],
+      "openUrls": [
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Local dev",
+      "color": "green",
+      "patterns": [
+        "localhost:3000",
+        "localhost:5173",
+        "localhost/dashboard",
+        "localhost/phpmyadmin",
+        "127.0.0.1"
+      ],
+      "openUrls": [
+        "localhost/dashboard",
+        "localhost/phpmyadmin"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Wikipedia",
+      "color": "purple",
+      "patterns": [
+        "# with scheme – http:// does not match",
+        "https://*.wikipedia.org/wiki"
+      ],
+      "openUrls": [
+        "https://en.wikipedia.org/wiki/Tab_(interface)",
+        "https://de.wikipedia.org/wiki/Google_Chrome"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "News",
+      "color": "pink",
+      "patterns": [],
+      "openUrls": [
+        "# paused starter set: no patterns, only opened on demand",
+        "https://news.ycombinator.com",
+        "https://www.heise.de",
+        "https://www.tagesschau.de"
+      ],
+      "enabled": false
+    }
+  ]
+}

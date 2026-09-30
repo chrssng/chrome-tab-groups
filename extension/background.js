@@ -267,10 +267,40 @@ async function targetWindow(windowId) {
 }
 
 /**
+ * Moves a freshly opened group to where it belongs according to the order of
+ * the list: right after the last group in the window that comes before it in
+ * the list – or else right before the first one that comes after it.
+ * Without such neighbours it stays where it is (at the end).
+ */
+async function placeInListOrder(windowId, chromeGroupId, def, config) {
+  const rank = new Map(config.groups.filter((g) => g.name).map((g, i) => [g.name, i]));
+  const own = rank.get(def.name);
+  const titles = new Map((await chrome.tabGroups.query({ windowId })).map((g) => [g.id, g.title ?? '']));
+  const tabs = (await chrome.tabs.query({ windowId })).sort((a, b) => a.index - b.index);
+
+  // tabGroups.move expects the position among the *other* tabs
+  const others = tabs.filter((t) => t.groupId !== chromeGroupId);
+  let after = -1;
+  let before = -1;
+  others.forEach((tab, position) => {
+    const r = tab.groupId === NO_GROUP ? undefined : rank.get(titles.get(tab.groupId));
+    if (r === undefined) return;
+    if (r < own) after = position + 1;
+    else if (r > own && before === -1) before = position;
+  });
+  const index = after !== -1 ? after : before;
+  const current = tabs.findIndex((t) => t.groupId === chromeGroupId);
+  if (index === -1 || index === current) return;
+  await retry(() => chrome.tabGroups.move(chromeGroupId, { index }));
+}
+
+/**
  * Opens a group's URLs as a tab group in window `windowId`.
  *  - Pages that are already open in this group are not opened twice.
  *  - If the active tab is an empty "New Tab", it is used for the first URL.
  *  - Afterwards the group is expanded and its (first new) tab is active.
+ *  - Optionally (openInListOrder), a new group is placed among the others
+ *    according to the order of the list.
  */
 async function openGroup(groupId, windowId) {
   await stateReady;
@@ -337,6 +367,10 @@ async function openGroup(groupId, windowId) {
     await retry(() =>
       chrome.tabGroups.update(chromeGroupId, { title: def.name, color: def.color, collapsed: false }),
     );
+    // Only new groups – one that was already open (maybe dragged by hand) stays put
+    if (!existing && config.settings.openInListOrder) {
+      await placeInListOrder(win.id, chromeGroupId, def, config).catch((err) => console.warn('[Tab Groups]', err));
+    }
   }
 
   // Show the group: its first new tab – or, if everything was already open, its first tab

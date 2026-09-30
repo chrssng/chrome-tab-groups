@@ -70,6 +70,14 @@
             <span class="setting-sub">If a tab navigates to a URL that no rule matches, it is taken out of its group (only groups managed here).</span>
           </span>
         </label>
+        <label class="switch setting">
+          <input type="checkbox" id="set-list-order">
+          <span class="track" aria-hidden="true"></span>
+          <span class="setting-text">
+            <span class="setting-title">Open groups in list order</span>
+            <span class="setting-sub">“Open group” places a new group in the tab strip according to the order above – after the groups that come before it in the list. When this is off, it is added at the end.</span>
+          </span>
+        </label>
       </div>
       <div class="sort-row">
         <button type="button" class="btn" id="sort-all"></button>
@@ -110,6 +118,27 @@
       </div>
     </section>
   </div>
+
+  <dialog class="dialog" id="import-dialog" aria-labelledby="import-title" aria-describedby="import-summary">
+    <form method="dialog">
+      <h2 id="import-title">Import groups</h2>
+      <p class="dialog-sub" id="import-summary"></p>
+      <div class="choices">
+        <button type="submit" class="choice" value="add">
+          <span class="choice-title">Add to my groups</span>
+          <span class="choice-sub">Your groups and settings stay. The groups from the file are added at the end – except those whose name already exists.</span>
+        </button>
+        <button type="submit" class="choice danger" value="replace">
+          <span class="choice-title">Replace all groups</span>
+          <span class="choice-sub">Your groups and settings are replaced by those from the file.</span>
+        </button>
+      </div>
+      <div class="dialog-foot">
+        <span class="muted small">Nothing changes until you click “Save”.</span>
+        <button type="submit" class="btn ghost" value="cancel">Cancel</button>
+      </div>
+    </form>
+  </dialog>
 
   <div class="savebar" id="savebar" aria-hidden="true">
     <div class="savebar-inner">

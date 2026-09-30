@@ -361,6 +361,20 @@ check('Moving up changes the order', (await optionsPage.locator('.group-card').f
 await optionsPage.click('#discard');
 check('Discard restores the saved state', (await optionsPage.locator('.group-card').last().locator('.name').inputValue()) === 'Docs');
 
+// Drag and drop: Docs (last) by its head onto the top half of the card above it
+const names = () => optionsPage.locator('.group-card .name').evaluateAll((els) => els.map((e) => e.value));
+const namesBefore = await names();
+await card.evaluate((el) => el.scrollIntoView({ block: 'end' }));
+await card.locator('.card-head').dragTo(optionsPage.locator('.group-card').nth(namesBefore.length - 2), { targetPosition: { x: 200, y: 10 } });
+const namesAfter = await names();
+check(
+  'Drag and drop moves a group',
+  namesAfter.join() === [...namesBefore.slice(0, -2), namesBefore.at(-1), namesBefore.at(-2)].join() &&
+    (await optionsPage.locator('#savebar.is-visible').count()) === 1,
+  namesAfter.join(),
+);
+await optionsPage.click('#discard');
+
 // ---------- Popup: assign a domain to a group ----------
 const t18 = await createTab(U('newsite.test/article'));
 await sleep(400);
@@ -553,6 +567,29 @@ wt = await waitFor(async () => {
   return t.length === 2 ? t : null;
 });
 check('Settings: “Open now” opens the group in the same window', wt, JSON.stringify(await windowTabs(optionsWindow)));
+
+// O9: “Open groups in list order” – list order Start, Paused, Tools; opened as Tools, Start, Paused
+await sw.evaluate(async () => {
+  const { settings } = await chrome.storage.sync.get('settings');
+  const rest = settings.order.filter((id) => !['start', 'paused', 'tools'].includes(id));
+  await chrome.storage.sync.set({
+    settings: { ...settings, openInListOrder: true, order: [...rest, 'start', 'paused', 'tools'] },
+  });
+});
+await sleep(300);
+const W3 = await sw.evaluate(async (url) => (await chrome.windows.create({ url })).id, U('other.test/order'));
+await sleep(700);
+const stripOrder = (windowId) =>
+  sw.evaluate(async (windowId) => {
+    const titles = Object.fromEntries((await chrome.tabGroups.query({ windowId })).map((g) => [g.id, g.title]));
+    const tabs = (await chrome.tabs.query({ windowId })).sort((a, b) => a.index - b.index);
+    return tabs.map((t) => titles[t.groupId] ?? '-').filter((title, i, all) => title !== all[i - 1]).join(' ');
+  }, windowId);
+await openGroupMsg('tools', W3);
+r = await openGroupMsg('start', W3);
+check('List order: a group further up goes in front of the later one', r?.ok && (await stripOrder(W3)) === '- Start Tools', await stripOrder(W3));
+r = await openGroupMsg('paused', W3);
+check('List order: … and between its neighbours', r?.ok && (await stripOrder(W3)) === '- Start Paused Tools', await stripOrder(W3));
 
 // ---------- Service worker warnings ----------
 const logs = (await sw.evaluate(() => self.__logs)) ?? ['(log hook lost – service worker restarted?)'];

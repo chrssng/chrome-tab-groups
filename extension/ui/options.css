@@ -69,10 +69,23 @@ body {
   align-items: center;
   gap: 12px;
   min-height: 56px;
-  padding: 8px 10px 8px 14px;
+  padding: 8px 10px 8px 8px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
+  cursor: grab;
 }
+
+.drag-handle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin-right: -6px;
+  color: var(--text-2);
+  opacity: 0.6;
+}
+.drag-handle svg { width: 18px; height: 18px; stroke-width: 3.2; }
+.card-head:hover .drag-handle { opacity: 1; }
+.group-card.is-dragging { opacity: 0.45; border-style: dashed; box-shadow: none; }
 
 .order {
   flex: none;
@@ -283,6 +296,44 @@ body {
 /* ---------- Backup ---------- */
 
 .backup-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- Import dialog ---------- */
+
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+}
+.dialog::backdrop { background: rgb(0 0 0 / 0.45); }
+.dialog h2 { font-size: 17px; }
+.dialog-sub { margin: 4px 0 18px; color: var(--text-2); font-size: 13.5px; }
+.choices { display: grid; gap: 10px; }
+.choice {
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+.choice:hover { border-color: var(--accent); background: var(--accent-soft); }
+.choice.danger:hover { border-color: var(--danger); background: var(--danger-soft); }
+.choice-title { font-weight: 600; color: var(--accent); }
+.choice.danger .choice-title { color: var(--danger); }
+.choice-sub { font-size: 13px; color: var(--text-2); }
+.dialog-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
 
 /* ---------- Save bar ---------- */
 

@@ -7,6 +7,7 @@ import {
   validateConfig,
   toExport,
   fromImport,
+  mergeImport,
 } from '../lib/config.js';
 import { compileGroups, explainMatch, urlsToOpen, shortUrl } from '../lib/patterns.js';
 import { h, icon, chip, swatches, note, toast } from './dom.js';
@@ -21,10 +22,13 @@ const els = {
   testResult: $('#test-result'),
   setEnabled: $('#set-enabled'),
   setUngroup: $('#set-ungroup'),
+  setListOrder: $('#set-list-order'),
   sortAll: $('#sort-all'),
   exportBtn: $('#export'),
   importBtn: $('#import'),
   importFile: $('#import-file'),
+  importDialog: $('#import-dialog'),
+  importSummary: $('#import-summary'),
   savebar: $('#savebar'),
   savebarText: $('#savebar-text'),
   save: $('#save'),
@@ -34,7 +38,7 @@ const els = {
 };
 
 /** Last saved state and working copy */
-let saved = { settings: { enabled: true, ungroupOnLeave: false }, groups: [] };
+let saved = { settings: { enabled: true, ungroupOnLeave: false, openInListOrder: false }, groups: [] };
 let draft = clone(saved);
 let validation = validateConfig(draft);
 let saving = false;
@@ -45,7 +49,11 @@ function clone(value) {
 
 function normalized(config) {
   return {
-    settings: { enabled: config.settings.enabled !== false, ungroupOnLeave: !!config.settings.ungroupOnLeave },
+    settings: {
+      enabled: config.settings.enabled !== false,
+      ungroupOnLeave: !!config.settings.ungroupOnLeave,
+      openInListOrder: !!config.settings.openInListOrder,
+    },
     groups: config.groups.map(normalizeGroup),
   };
 }
@@ -60,6 +68,7 @@ const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 function renderAll() {
   els.setEnabled.checked = draft.settings.enabled;
   els.setUngroup.checked = draft.settings.ungroupOnLeave;
+  els.setListOrder.checked = draft.settings.openInListOrder;
   renderGroups();
   refresh();
 }
@@ -96,7 +105,8 @@ function groupCard(group, index, total) {
     { class: `group-card${group.enabled ? '' : ' is-disabled'}`, dataset: { id } },
     h(
       'div',
-      { class: 'card-head' },
+      { class: 'card-head', draggable: 'true' },
+      h('span', { class: 'drag-handle', title: 'Drag to change the order' }, icon('grip')),
       h('span', { class: 'order', title: `Priority ${index + 1}` }, String(index + 1)),
       preview(group),
       h(
@@ -357,6 +367,54 @@ els.groups.addEventListener('click', (event) => {
   }
 });
 
+/* ---------- Drag and drop (the card head is the handle) ---------- */
+
+let dragged = null; // card being dragged
+let dropped = false; // released on the page (not cancelled with Esc)
+
+els.groups.addEventListener('dragstart', (event) => {
+  const head = event.target.closest?.('.card-head');
+  if (!head) return; // e.g. text dragged out of an input
+  dragged = head.closest('.group-card');
+  dropped = false;
+  event.dataTransfer.effectAllowed = 'move';
+  requestAnimationFrame(() => dragged?.classList.add('is-dragging')); // after the drag image was taken
+});
+
+// The card moves along while dragging: before/after the card under the pointer, depending on its half
+document.addEventListener('dragover', (event) => {
+  if (!dragged) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  const over = event.target.closest?.('.group-card');
+  if (!over || over === dragged) return;
+  const { top, height } = over.getBoundingClientRect();
+  if (event.clientY > top + height / 2) {
+    if (over.nextElementSibling !== dragged) over.after(dragged);
+  } else if (over.previousElementSibling !== dragged) {
+    over.before(dragged);
+  }
+});
+
+document.addEventListener('drop', (event) => {
+  if (!dragged) return;
+  event.preventDefault();
+  dropped = true;
+});
+
+els.groups.addEventListener('dragend', () => {
+  if (!dragged) return;
+  const { id } = dragged.dataset;
+  dragged = null;
+  if (dropped) {
+    const order = [...els.groups.children].map((card) => card.dataset.id);
+    draft.groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  }
+  renderGroups(); // cancelled (Esc) → back to the previous order
+  refresh();
+  els.groups.querySelector(`[data-id="${id}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
 els.addGroup.append(icon('plus'), 'Add group');
 els.addGroup.addEventListener('click', () => {
   const group = normalizeGroup({ id: newId(), name: '', color: nextFreeColor(draft.groups), patterns: [] });
@@ -374,6 +432,10 @@ els.setEnabled.addEventListener('change', () => {
 });
 els.setUngroup.addEventListener('change', () => {
   draft.settings.ungroupOnLeave = els.setUngroup.checked;
+  refresh();
+});
+els.setListOrder.addEventListener('change', () => {
+  draft.settings.openInListOrder = els.setListOrder.checked;
   refresh();
 });
 
@@ -471,10 +533,24 @@ els.exportBtn.append(icon('download'), 'Export');
 els.exportBtn.addEventListener('click', () => {
   const data = JSON.stringify(toExport(normalized(draft)), null, 2);
   const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-  const date = new Date().toISOString().slice(0, 10);
-  h('a', { href: url, download: `tab-groups-${date}.json` }).click();
+  const now = new Date(); // local date, e.g. 260930_tab-groups.json
+  const date = [now.getFullYear() % 100, now.getMonth() + 1, now.getDate()].map((n) => String(n).padStart(2, '0')).join('');
+  h('a', { href: url, download: `${date}_tab-groups.json` }).click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
+
+/** Asks whether the import adds to or replaces the current groups: 'add' | 'replace' | '' (cancelled). */
+function askImportMode(imported) {
+  const dialog = els.importDialog;
+  els.importSummary.textContent =
+    `The file contains ${plural(imported.groups.length, 'group', 'groups')}, ` +
+    `you currently have ${plural(draft.groups.length, 'group', 'groups')}.`;
+  dialog.returnValue = ''; // Esc closes without a value
+  dialog.showModal();
+  return new Promise((resolve) => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
+  });
+}
 
 els.importBtn.append(icon('upload'), 'Import …');
 els.importBtn.addEventListener('click', () => els.importFile.click());
@@ -484,19 +560,25 @@ els.importFile.addEventListener('change', async () => {
   if (!file) return;
   try {
     const imported = fromImport(await file.text());
-    if (
-      draft.groups.length &&
-      !confirm(
-        `The import replaces your ${plural(draft.groups.length, 'group', 'groups')} with ` +
-          `${plural(imported.groups.length, 'group', 'groups')} from the file.\n\n` +
-          'It only takes effect once you click “Save”.',
-      )
-    ) {
-      return;
+    const mode = draft.groups.length ? await askImportMode(imported) : 'replace';
+    if (mode === 'replace') {
+      draft = imported;
+      renderAll();
+      toast('Import loaded – please review and save.');
+    } else if (mode === 'add') {
+      const { config, added, skipped } = mergeImport(draft, imported);
+      const skippedText = skipped.length
+        ? `${plural(skipped.length, 'group', 'groups')} skipped (name already exists)`
+        : '';
+      if (!added.length) {
+        toast(`Nothing added – ${skippedText || 'the file has no groups'}.`, 'error');
+        return;
+      }
+      draft = config;
+      renderAll();
+      const parts = [`${plural(added.length, 'group', 'groups')} added`, skippedText].filter(Boolean);
+      toast(`${parts.join(', ')} – please review and save.`);
     }
-    draft = imported;
-    renderAll();
-    toast('Import loaded – please review and save.');
   } catch (err) {
     toast(err.message, 'error');
   }

@@ -2,7 +2,7 @@
  * Loading, saving and validating the configuration.
  *
  * Stored in chrome.storage.sync (so it follows your Chrome account):
- *   settings        → { enabled, ungroupOnLeave, order: [ids] }
+ *   settings        → { enabled, ungroupOnLeave, openInListOrder, order: [ids] }
  *   group:<id>      → { name, color, patterns: [...], openUrls: [...], enabled }
  * Each group lives in its own entry because Chrome sync only allows
  * 8 KB per entry.
@@ -12,13 +12,16 @@ import { compileGroups, findMatch, sampleUrl, toOpenUrl } from './patterns.js';
 
 export const SETTINGS_KEY = 'settings';
 export const GROUP_PREFIX = 'group:';
-export const DEFAULT_SETTINGS = Object.freeze({ enabled: true, ungroupOnLeave: false });
+export const DEFAULT_SETTINGS = Object.freeze({ enabled: true, ungroupOnLeave: false, openInListOrder: false });
 
 const storage = () => chrome.storage.sync;
 
 export function newId() {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
 }
+
+/** Group names are unique regardless of case and surrounding spaces. */
+const nameKey = (name) => String(name ?? '').trim().toLocaleLowerCase('en');
 
 const cleanLines = (lines) => (Array.isArray(lines) ? lines.map((l) => String(l).trim()).filter(Boolean) : []);
 
@@ -37,6 +40,7 @@ function normalizeSettings(input = {}) {
   return {
     enabled: input.enabled !== false,
     ungroupOnLeave: input.ungroupOnLeave === true,
+    openInListOrder: input.openInListOrder === true,
   };
 }
 
@@ -140,6 +144,31 @@ export function fromImport(text) {
   };
 }
 
+/**
+ * Import in "add" mode: the imported groups go after the current ones, the
+ * current settings stay. Groups whose name already exists are skipped –
+ * otherwise saving would be blocked by the duplicate name.
+ */
+export function mergeImport(current, imported) {
+  const taken = new Set(current.groups.map((g) => nameKey(g.name)));
+  const added = [];
+  const skipped = [];
+  for (const group of imported.groups) {
+    const key = nameKey(group.name);
+    if (key && taken.has(key)) {
+      skipped.push(group);
+      continue;
+    }
+    if (key) taken.add(key);
+    added.push(group);
+  }
+  return {
+    config: { settings: { ...current.settings }, groups: [...current.groups, ...added] },
+    added,
+    skipped,
+  };
+}
+
 /* ---------- Validation ---------- */
 
 /**
@@ -167,7 +196,7 @@ export function validateConfig(config) {
       }
     });
 
-    const key = group.name.trim().toLocaleLowerCase('en');
+    const key = nameKey(group.name);
     if (!key) {
       item.nameError = 'Please enter a name.';
     } else if (seenNames.has(key)) {

@@ -26,7 +26,7 @@ For each group you set:
 - **Color** – one of the nine colors Chrome offers for groups
 - **URL patterns** – one per line (see below)
 - **Pages to open** (optional) – the pages that “Open group” loads
-- **Active/Paused** and the **order** (↑ ↓) – if a URL matches several groups, the topmost one wins
+- **Active/Paused** and the **order** (drag a group by its header, or use ↑ ↓) – if a URL matches several groups, the topmost one wins
 
 Everything takes effect when you click **Save** (or press <kbd>Ctrl</kbd>+<kbd>S</kbd>). Under “Test a URL” you can see right away which group a URL would land in.
 
@@ -41,6 +41,7 @@ Click the extension's icon → under **Open group**, click the group. All of its
 - **Empty tab:** if the active tab is an empty “New Tab”, it is used for the first page.
 - **No duplicates:** if the group is already open in the window, only the missing pages are added. A page also counts as open if its tab has moved on to a subpage in the meantime. The popup then shows “open” next to the group.
 - **Redirects:** freshly opened tabs stay in their group for the first 30 seconds, even if the page redirects, e.g. to a login page or to a URL that belongs to another group.
+- **Position:** a new group is added at the end of the tab strip. With “Open groups in list order” (settings → Behavior), it is placed according to the order of your list instead – right after the groups that come before it, or before the ones that come after it. Groups that are already open aren't moved.
 - **Paused** groups can be opened too – handy for pure “starter sets” that shouldn't sort tabs automatically.
 
 ![The “Work” group with three pages, opened in one click](docs/open-group.png)
@@ -77,7 +78,7 @@ Example “everything from Google except Gmail”: a group *Google* with `google
 - **Renaming/recoloring** a group in the settings immediately applies to groups that are already open.
 - **Sort all tabs now** (popup or settings) also sorts tabs that were already open.
 - **Pausing:** use the switch at the top of the popup. The icon then shows “off”. “Open group” still works.
-- **Backup:** the settings are stored in `chrome.storage.sync` and follow your Google account if Chrome sync is turned on for extensions. There's also export/import as JSON.
+- **Backup:** the settings are stored in `chrome.storage.sync` and follow your Google account if Chrome sync is turned on for extensions. There's also export/import as JSON. When importing, you choose whether the groups from the file are **added** to yours (groups whose name already exists are skipped, your settings stay) or **replace** them.
 
 ## Permissions
 
@@ -106,19 +107,42 @@ extension/            ← load this folder in Chrome
   ui/shared.css       shared styles, light/dark
 tests/
   patterns.test.mjs   unit tests for the pattern logic
+  config.test.mjs     unit tests for import
   e2e.mjs             end-to-end test in a real Chromium
+  sample-groups.json  sample settings for trying out the features
 ```
 
 No build step, no runtime dependencies – plain JavaScript (ES modules).
+
+To try out the features without setting up groups by hand, **Import** `tests/sample-groups.json` in the settings. It contains nine groups – one per color – covering subdomains, path prefixes, wildcards, ports, a scheme, a regular expression, exclusions, comments, the order of groups, “Pages to open” and a paused starter set.
 
 ```bash
 npm test                          # unit tests (Node 20+)
 npm install                       # only needed for the E2E test (Playwright)
 npx playwright install chromium
-npm run test:e2e                  # 66 checks in a real Chromium, no internet needed
+npm run test:e2e                  # 69 checks in a real Chromium, no internet needed
 ```
 
 Debugging: on `chrome://extensions`, click **Service Worker** on the extension's entry – this opens DevTools for `background.js`.
+
+### Commit messages
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), and a **scope is always required**:
+
+```
+<type>(<scope>): <description>
+```
+
+- **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+- **Scope:** the part of the project that changes, e.g. `background`, `patterns`, `config`, `options`, `popup`, `manifest`, `e2e`, `readme`, `deps`
+- **Breaking changes:** `!` before the colon (`feat(config)!: …`) and/or a `BREAKING CHANGE:` footer
+
+```
+feat(popup): show which groups are already open
+fix(background): keep pinned tabs out of groups
+docs(readme): explain exclusion patterns
+chore(deps): update playwright
+```
 
 ## License
 
