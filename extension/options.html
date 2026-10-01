@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Tab Groups by URL – Settings</title>
+  <!-- Texts: data-i18n* → _locales/<language>/messages.json, filled in by localize() in ui/dom.js -->
+  <title data-i18n="optionsTitle"></title>
   <link rel="icon" href="icons/icon32.png">
   <link rel="stylesheet" href="ui/shared.css">
   <link rel="stylesheet" href="ui/options.css">
@@ -14,26 +15,26 @@
     <header class="page-head">
       <img src="icons/icon128.png" alt="" width="48" height="48">
       <div>
-        <h1>Tab Groups by URL</h1>
-        <p class="lede">When you open a page whose URL matches a pattern, the tab automatically lands in the matching tab group – with the name and color you set here. Click the extension’s icon to open any group with all its pages in one go.</p>
+        <h1 data-i18n="extName"></h1>
+        <p class="lede" data-i18n="optionsLede"></p>
       </div>
     </header>
 
     <div id="external-change" class="banner" role="status" hidden>
-      <span>The settings have been changed elsewhere in the meantime (e.g. from the popup or on another device).</span>
-      <button type="button" class="btn" id="reload">Reload</button>
+      <span data-i18n="externalChange"></span>
+      <button type="button" class="btn" id="reload" data-i18n="reload"></button>
     </div>
 
     <section class="panel" aria-labelledby="h-groups">
       <div class="panel-head">
         <div>
-          <h2 id="h-groups">Groups</h2>
-          <p class="panel-sub">Sorted into categories. If a URL matches several groups, the <strong>topmost</strong> one wins.</p>
+          <h2 id="h-groups" data-i18n="groupsHeading"></h2>
+          <p class="panel-sub" data-i18n-html="groupsSub"></p>
         </div>
         <button type="button" class="btn ghost small" id="collapse-all"></button>
       </div>
 
-      <div id="groups" class="sections" aria-label="Groups"></div>
+      <div id="groups" class="sections" data-i18n-attr="aria-label: groupsHeading"></div>
 
       <div class="add-row">
         <button type="button" class="btn primary" id="add-group"></button>
@@ -42,76 +43,76 @@
     </section>
 
     <section class="panel" aria-labelledby="h-test">
-      <h2 id="h-test">Test a URL</h2>
-      <p class="panel-sub">Checks the current settings – including unsaved changes.</p>
+      <h2 id="h-test" data-i18n="testHeading"></h2>
+      <p class="panel-sub" data-i18n="testSub"></p>
       <div class="test-row">
-        <label class="sr-only" for="test-url">URL to test</label>
+        <label class="sr-only" for="test-url" data-i18n="testLabel"></label>
         <input class="input" id="test-url" type="text" inputmode="url" autocomplete="off" spellcheck="false"
-               placeholder="e.g. https://github.com/my-company/project">
+               data-i18n-attr="placeholder: testPlaceholder">
       </div>
       <div id="test-result" class="test-result" aria-live="polite"></div>
     </section>
 
     <section class="panel" aria-labelledby="h-behaviour">
-      <h2 id="h-behaviour">Behavior</h2>
+      <h2 id="h-behaviour" data-i18n="behaviorHeading"></h2>
       <div class="settings">
         <label class="switch setting">
           <input type="checkbox" id="set-enabled">
           <span class="track" aria-hidden="true"></span>
           <span class="setting-text">
-            <span class="setting-title">Group tabs automatically</span>
-            <span class="setting-sub">When this is off, tabs are only sorted when you choose “Sort all tabs”.</span>
+            <span class="setting-title" data-i18n="setEnabledTitle"></span>
+            <span class="setting-sub" data-i18n="setEnabledSub"></span>
           </span>
         </label>
         <label class="switch setting">
           <input type="checkbox" id="set-ungroup">
           <span class="track" aria-hidden="true"></span>
           <span class="setting-text">
-            <span class="setting-title">Remove a tab from its group when it leaves the group</span>
-            <span class="setting-sub">If a tab navigates to a URL that no rule matches, it is taken out of its group (only groups managed here).</span>
+            <span class="setting-title" data-i18n="setUngroupTitle"></span>
+            <span class="setting-sub" data-i18n="setUngroupSub"></span>
           </span>
         </label>
         <label class="switch setting">
           <input type="checkbox" id="set-list-order">
           <span class="track" aria-hidden="true"></span>
           <span class="setting-text">
-            <span class="setting-title">Open groups in list order</span>
-            <span class="setting-sub">“Open group” places a new group in the tab strip according to the order above – after the groups that come before it in the list. When this is off, it is added at the end.</span>
+            <span class="setting-title" data-i18n="setListOrderTitle"></span>
+            <span class="setting-sub" data-i18n="setListOrderSub"></span>
           </span>
         </label>
       </div>
       <div class="sort-row">
         <button type="button" class="btn" id="sort-all"></button>
-        <span class="muted small">Sorts all tabs that are already open, in all windows, according to the saved rules.</span>
+        <span class="muted small" data-i18n="sortAllHint"></span>
       </div>
     </section>
 
     <section class="panel" aria-labelledby="h-syntax">
       <details class="syntax">
-        <summary><h2 id="h-syntax">How to write URL patterns</h2></summary>
+        <summary><h2 id="h-syntax" data-i18n="syntaxHeading"></h2></summary>
         <table>
-          <thead><tr><th scope="col">Pattern</th><th scope="col">Matches</th></tr></thead>
+          <thead><tr><th scope="col" data-i18n="syntaxPattern"></th><th scope="col" data-i18n="syntaxMatches"></th></tr></thead>
           <tbody>
-            <tr><td><code>github.com</code></td><td>github.com and all subdomains (www., gist., …), any path</td></tr>
-            <tr><td><code>*.atlassian.net</code></td><td>same as <code>atlassian.net</code></td></tr>
-            <tr><td><code>github.com/my-company</code></td><td>only URLs that start with this path</td></tr>
-            <tr><td><code>github.com/*/issues</code></td><td><code>*</code> stands for any number of characters</td></tr>
-            <tr><td><code>localhost:3000</code></td><td>only this port</td></tr>
-            <tr><td><code>https://intranet.example.com/wiki</code></td><td>with scheme – <code>http://</code> doesn’t match then</td></tr>
-            <tr><td><code>/\.pdf$/i</code></td><td>regular expression, tested against the full URL</td></tr>
-            <tr><td><code>!mail.google.com</code></td><td>exclusion: if the URL matches it, the group is skipped</td></tr>
-            <tr><td><code># note</code></td><td>comment, ignored</td></tr>
+            <tr><td><code>github.com</code></td><td data-i18n="syntaxDomain"></td></tr>
+            <tr><td><code>*.atlassian.net</code></td><td data-i18n-html="syntaxSubdomains"></td></tr>
+            <tr><td><code>github.com/my-company</code></td><td data-i18n="syntaxPath"></td></tr>
+            <tr><td><code>github.com/*/issues</code></td><td data-i18n-html="syntaxWildcard"></td></tr>
+            <tr><td><code>localhost:3000</code></td><td data-i18n="syntaxPort"></td></tr>
+            <tr><td><code>https://intranet.example.com/wiki</code></td><td data-i18n-html="syntaxScheme"></td></tr>
+            <tr><td><code>/\.pdf$/i</code></td><td data-i18n="syntaxRegex"></td></tr>
+            <tr><td><code>!mail.google.com</code></td><td data-i18n="syntaxExclusion"></td></tr>
+            <tr><td><code># note</code></td><td data-i18n="syntaxComment"></td></tr>
           </tbody>
         </table>
-        <p class="muted small">Matching is case-insensitive, and a leading <code>www.</code> is ignored. Patterns (except regular expressions) match the beginning of the URL – anything after that matches automatically.</p>
-        <h3 class="syntax-sub">Pages to open</h3>
-        <p class="muted small">Concrete URLs that “Open group” loads as tabs, e.g. <code>https://github.com/my-company/webshop/pulls</code>. Without a scheme, <code>https://</code> is added (<code>http://</code> for <code>localhost</code>, IP addresses and URLs with a port). If the field is empty, the URL patterns that are concrete URLs are opened. Pages that are already open in the group are not opened twice; an empty “New Tab” is used for the first page.</p>
+        <p class="muted small" data-i18n-html="syntaxNote"></p>
+        <h3 class="syntax-sub" data-i18n="pagesToOpen"></h3>
+        <p class="muted small" data-i18n-html="syntaxOpen"></p>
       </details>
     </section>
 
     <section class="panel" aria-labelledby="h-backup">
-      <h2 id="h-backup">Back up, transfer &amp; reset</h2>
-      <p class="panel-sub">Your groups are synced via your Google account if Chrome sync is turned on for extensions. You can also back them up to a file – or start over from scratch.</p>
+      <h2 id="h-backup" data-i18n="backupHeading"></h2>
+      <p class="panel-sub" data-i18n="backupSub"></p>
       <div class="backup-row">
         <button type="button" class="btn" id="export"></button>
         <button type="button" class="btn" id="import"></button>
@@ -123,14 +124,14 @@
 
   <dialog class="dialog" id="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-summary">
     <form method="dialog">
-      <h2 id="reset-title">Reset everything?</h2>
-      <p class="dialog-sub" id="reset-summary">All categories and groups are removed, and the Behavior options go back to their defaults – as right after installing. Tab groups that are open right now stay as they are.</p>
-      <p class="dialog-sub">After saving, this also applies to every computer that syncs this extension via Chrome sync. Tip: <strong>Export</strong> your groups first.</p>
+      <h2 id="reset-title" data-i18n="resetTitle"></h2>
+      <p class="dialog-sub" id="reset-summary" data-i18n="resetSummary"></p>
+      <p class="dialog-sub" data-i18n-html="resetSync"></p>
       <div class="dialog-foot">
-        <span class="muted small">Nothing changes until you click “Save”.</span>
+        <span class="muted small" data-i18n="nothingUntilSave"></span>
         <span class="dialog-actions">
-          <button type="submit" class="btn ghost" value="cancel" autofocus>Cancel</button>
-          <button type="submit" class="btn danger" value="reset">Reset</button>
+          <button type="submit" class="btn ghost" value="cancel" autofocus data-i18n="cancel"></button>
+          <button type="submit" class="btn danger" value="reset" data-i18n="reset"></button>
         </span>
       </div>
     </form>
@@ -138,30 +139,30 @@
 
   <dialog class="dialog" id="import-dialog" aria-labelledby="import-title" aria-describedby="import-summary">
     <form method="dialog">
-      <h2 id="import-title">Import groups</h2>
+      <h2 id="import-title" data-i18n="importTitle"></h2>
       <p class="dialog-sub" id="import-summary"></p>
       <div class="choices">
         <button type="submit" class="choice" value="add">
-          <span class="choice-title">Add to my groups</span>
-          <span class="choice-sub">Your groups and settings stay. The groups from the file are added – except those whose name already exists in the same category.</span>
+          <span class="choice-title" data-i18n="importAddTitle"></span>
+          <span class="choice-sub" data-i18n="importAddSub"></span>
         </button>
         <button type="submit" class="choice danger" value="replace">
-          <span class="choice-title">Replace all groups</span>
-          <span class="choice-sub">Your groups and settings are replaced by those from the file.</span>
+          <span class="choice-title" data-i18n="importReplaceTitle"></span>
+          <span class="choice-sub" data-i18n="importReplaceSub"></span>
         </button>
       </div>
       <div class="dialog-foot">
-        <span class="muted small">Nothing changes until you click “Save”.</span>
-        <button type="submit" class="btn ghost" value="cancel">Cancel</button>
+        <span class="muted small" data-i18n="nothingUntilSave"></span>
+        <button type="submit" class="btn ghost" value="cancel" data-i18n="cancel"></button>
       </div>
     </form>
   </dialog>
 
   <div class="savebar" id="savebar" aria-hidden="true">
     <div class="savebar-inner">
-      <span class="savebar-text" id="savebar-text">Unsaved changes</span>
-      <button type="button" class="btn ghost" id="discard">Discard</button>
-      <button type="button" class="btn primary" id="save">Save</button>
+      <span class="savebar-text" id="savebar-text"></span>
+      <button type="button" class="btn ghost" id="discard" data-i18n="discard"></button>
+      <button type="button" class="btn primary" id="save" data-i18n="save"></button>
     </div>
   </div>
 

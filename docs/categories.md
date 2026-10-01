@@ -6,7 +6,7 @@ Categories sort your groups into sections – e.g. *Work*, *Reading*, *Private*.
 
 ## The “Default” category
 
-There is always at least one category. After installing – or with settings from an older version – it's **Default**, and all groups are in it. You can rename it like any other category.
+There is always at least one category. After installing – or with settings from an older version – it's **Default** (**Standard** in a German Chrome), and all groups are in it. You can rename it like any other category.
 
 ## Managing categories
 

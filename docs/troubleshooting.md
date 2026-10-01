@@ -43,6 +43,10 @@ Give such groups different colors, or turn on **Show the category in the tab tit
 
 You probably loaded the new version from a different folder – Chrome treats that as a different extension. Load the old folder again, **Export**, then **Import** in the new one. See [Updating the extension](backup-and-sync.md#updating-the-extension-or-moving-to-another-computer).
 
+## The extension shows the wrong language
+
+It follows the language of Chrome's user interface – English or German, any other language falls back to English. See [Language](README.md#language). The names of your groups and categories stay as they were saved – only until the settings are saved for the first time does the *Default* category follow the language (*Standard* in German).
+
 ## Debugging
 
 On `chrome://extensions`, click **Service Worker** on the extension's entry. This opens DevTools for the background script; warnings are logged with the prefix `[Tab Groups]`.

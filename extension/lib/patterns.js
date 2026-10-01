@@ -18,9 +18,11 @@
  * Also: which URLs "Open group" loads (toOpenUrl, urlsToOpen) and which of
  * them are already open in a group (missingUrls).
  *
- * This file deliberately makes no chrome.* calls so it runs in the
- * background script, in the extension's pages and in Node tests.
+ * This file deliberately makes no chrome.* calls (apart from the texts via
+ * i18n.js) so it runs in the background script, in the extension's pages and
+ * in Node tests.
  */
+import { t } from './i18n.js';
 
 export class PatternError extends Error {}
 
@@ -95,7 +97,7 @@ export function compilePattern(line) {
   if (text.startsWith('!')) {
     negate = true;
     text = text.slice(1).trim();
-    if (!text) throw new PatternError('Empty exclusion pattern.');
+    if (!text) throw new PatternError(t('patEmptyExclusion'));
   }
 
   const regex = REGEX_PATTERN.exec(text);
@@ -106,7 +108,7 @@ export function compilePattern(line) {
     } catch (err) {
       // "Invalid regular expression: /…/: Unterminated character class" → show only the reason
       const reason = String(err.message).split(': ').pop();
-      throw new PatternError(`Invalid regular expression (${reason}).`);
+      throw new PatternError(t('patInvalidRegex', reason));
     }
     return {
       raw,
@@ -119,7 +121,7 @@ export function compilePattern(line) {
     };
   }
 
-  if (/\s/.test(text)) throw new PatternError('Patterns must not contain spaces.');
+  if (/\s/.test(text)) throw new PatternError(t('patNoSpaces'));
 
   let scheme = null;
   let rest = text;
@@ -136,10 +138,10 @@ export function compilePattern(line) {
   if (pathPart && !pathPart.startsWith('/')) pathPart = `/${pathPart}`;
 
   if (!scheme && !hostPart) {
-    throw new PatternError('Domain missing (use * for any domain).');
+    throw new PatternError(t('patDomainMissing'));
   }
   if (!HOST_CHARS.test(hostPart)) {
-    throw new PatternError(`Invalid domain “${hostPart}”.`);
+    throw new PatternError(t('patInvalidDomain', hostPart));
   }
 
   const matchScheme = schemeMatcher(scheme);
@@ -296,25 +298,25 @@ export function toOpenUrl(line) {
   const text = String(line ?? '').trim();
   if (!text || text.startsWith('#')) return null;
   if (text.startsWith('!') || REGEX_PATTERN.test(text)) {
-    throw new PatternError('Only concrete URLs are allowed here, no patterns.');
+    throw new PatternError(t('urlNoPatterns'));
   }
-  if (/\s/.test(text)) throw new PatternError('URLs must not contain spaces.');
+  if (/\s/.test(text)) throw new PatternError(t('urlNoSpaces'));
   if (text.includes('*')) {
-    throw new PatternError('Wildcards (*) are not allowed here – please enter a concrete URL.');
+    throw new PatternError(t('urlNoWildcards'));
   }
 
   let candidate = text;
   if (!HAS_SCHEME.test(text)) {
     const hostPart = text.split(/[/?#]/)[0];
-    if (!hostPart || !PLAIN_HOST_CHARS.test(hostPart)) throw new PatternError('Not a valid URL.');
+    if (!hostPart || !PLAIN_HOST_CHARS.test(hostPart)) throw new PatternError(t('urlInvalid'));
     candidate = `${defaultScheme(hostPart)}://${text}`;
   }
   const u = parseUrl(candidate);
-  if (!u || (u.protocol !== 'file:' && !u.hostname)) throw new PatternError('Not a valid URL.');
+  if (!u || (u.protocol !== 'file:' && !u.hostname)) throw new PatternError(t('urlInvalid'));
   if (!OPENABLE_PROTOCOLS.has(u.protocol)) {
-    throw new PatternError('Only http, https, file and chrome URLs can be opened.');
+    throw new PatternError(t('urlProtocol'));
   }
-  if (u.username || u.password) throw new PatternError('URLs with credentials are not supported.');
+  if (u.username || u.password) throw new PatternError(t('urlCredentials'));
   return u.href;
 }
 

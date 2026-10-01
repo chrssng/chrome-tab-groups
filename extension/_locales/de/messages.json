@@ -1,0 +1,1051 @@
+{
+  "lang": {
+    "message": "de"
+  },
+  "extName": {
+    "message": "Tab Groups by URL"
+  },
+  "extShortName": {
+    "message": "Tab Groups"
+  },
+  "extDescription": {
+    "message": "Sortiert Tabs anhand ihrer URL automatisch in vordefinierte Tab-Gruppen mit Name und Farbe."
+  },
+  "actionTitlePaused": {
+    "message": "Tab Groups by URL (pausiert)"
+  },
+  "badgeOff": {
+    "message": "aus"
+  },
+  "unnamed": {
+    "message": "Unbenannt"
+  },
+  "unnamedCategory": {
+    "message": "Unbenannte Kategorie"
+  },
+  "defaultCategory": {
+    "message": "Standard"
+  },
+  "quoted": {
+    "message": "„$TEXT$“",
+    "placeholders": {
+      "text": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "Unbekannter Fehler"
+  },
+  "color": {
+    "message": "Farbe"
+  },
+  "colorGrey": {
+    "message": "Grau"
+  },
+  "colorBlue": {
+    "message": "Blau"
+  },
+  "colorRed": {
+    "message": "Rot"
+  },
+  "colorYellow": {
+    "message": "Gelb"
+  },
+  "colorGreen": {
+    "message": "Grün"
+  },
+  "colorPink": {
+    "message": "Pink"
+  },
+  "colorPurple": {
+    "message": "Lila"
+  },
+  "colorCyan": {
+    "message": "Cyan"
+  },
+  "colorOrange": {
+    "message": "Orange"
+  },
+  "group_one": {
+    "message": "$COUNT$ Gruppe",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "group_other": {
+    "message": "$COUNT$ Gruppen",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "page_one": {
+    "message": "$COUNT$ Seite",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "page_other": {
+    "message": "$COUNT$ Seiten",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "openGroup": {
+    "message": "Gruppe öffnen"
+  },
+  "openAll": {
+    "message": "Alle öffnen"
+  },
+  "pagesOpened_one": {
+    "message": "$COUNT$ Seite geöffnet",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "pagesOpened_other": {
+    "message": "$COUNT$ Seiten geöffnet",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "allAlreadyOpen": {
+    "message": "alle Seiten waren schon offen"
+  },
+  "couldNotOpen": {
+    "message": "konnte nicht öffnen: $URLS$",
+    "placeholders": {
+      "urls": {
+        "content": "$1"
+      }
+    }
+  },
+  "openResult": {
+    "message": "„$NAME$“: $DETAILS$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "details": {
+        "content": "$2"
+      }
+    }
+  },
+  "openingFailed": {
+    "message": "Öffnen fehlgeschlagen: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "sortAll": {
+    "message": "Alle Tabs sortieren"
+  },
+  "tabsSorted_one": {
+    "message": "$COUNT$ Tab in Gruppen sortiert",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsSorted_other": {
+    "message": "$COUNT$ Tabs in Gruppen sortiert",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsUngrouped_one": {
+    "message": "$COUNT$ Tab aus Gruppen genommen",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsUngrouped_other": {
+    "message": "$COUNT$ Tabs aus Gruppen genommen",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "alreadySorted": {
+    "message": "Alles ist schon sortiert."
+  },
+  "sortingFailed": {
+    "message": "Sortieren fehlgeschlagen: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupGone": {
+    "message": "Diese Gruppe gibt es nicht mehr."
+  },
+  "categoryGone": {
+    "message": "Diese Kategorie gibt es nicht mehr."
+  },
+  "nothingToOpenGroup": {
+    "message": "Für „$NAME$“ gibt es keine URL zum Öffnen.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingToOpenCategory": {
+    "message": "In „$NAME$“ gibt es nichts zu öffnen.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "errTooManyPatterns": {
+    "message": "Eine Gruppe hat zu viele Muster – Chrome Sync erlaubt höchstens 8 KB pro Gruppe. Bitte auf mehrere Gruppen aufteilen."
+  },
+  "errSettingsTooLarge": {
+    "message": "Die Einstellungen sind zu groß für Chrome Sync (max. 100 KB)."
+  },
+  "errTooManySaves": {
+    "message": "Zu oft in kurzer Zeit gespeichert – bitte in einer Minute erneut versuchen."
+  },
+  "errSaveFailed": {
+    "message": "Speichern fehlgeschlagen: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "errImportJson": {
+    "message": "Die Datei ist kein gültiges JSON."
+  },
+  "errImportNoGroups": {
+    "message": "In der Datei sind keine Gruppen."
+  },
+  "valCategoryName": {
+    "message": "Bitte einen Namen für die Kategorie eingeben."
+  },
+  "valCategoryExists": {
+    "message": "Die Kategorie „$NAME$“ gibt es schon.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "valGroupName": {
+    "message": "Bitte einen Namen eingeben."
+  },
+  "valGroupExists": {
+    "message": "Den Namen „$NAME$“ gibt es in dieser Kategorie schon.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "valTitleTwin": {
+    "message": "Die Gruppe „$NAME$“ in $CATEGORIES$ hat denselben Titel in der Tab-Leiste.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "categories": {
+        "content": "$2"
+      }
+    }
+  },
+  "valTitleTwinSameColor": {
+    "message": "Unterschiedliche Farben wählen oder die Kategorie im Titel zeigen – sonst können ihre Tabs in derselben Tab-Gruppe landen."
+  },
+  "valTitleTwinByColor": {
+    "message": "Unterschieden werden sie an ihrer Farbe – oder die Kategorie im Titel zeigen."
+  },
+  "valNoPatterns": {
+    "message": "Noch kein URL-Muster – Tabs landen nie automatisch in dieser Gruppe."
+  },
+  "valShadowed": {
+    "message": "„$PATTERN$“ wird schon von „$GROUP$“ weiter oben erfasst – diese Gruppe nach oben schieben oder dort ein Ausschlussmuster (!) ergänzen.",
+    "placeholders": {
+      "pattern": {
+        "content": "$1"
+      },
+      "group": {
+        "content": "$2"
+      }
+    }
+  },
+  "patEmptyExclusion": {
+    "message": "Leeres Ausschlussmuster."
+  },
+  "patInvalidRegex": {
+    "message": "Ungültiger regulärer Ausdruck ($REASON$).",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "patNoSpaces": {
+    "message": "Muster dürfen keine Leerzeichen enthalten."
+  },
+  "patDomainMissing": {
+    "message": "Domain fehlt (* steht für jede Domain)."
+  },
+  "patInvalidDomain": {
+    "message": "Ungültige Domain „$DOMAIN$“.",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
+  },
+  "urlNoPatterns": {
+    "message": "Hier sind nur konkrete URLs erlaubt, keine Muster."
+  },
+  "urlNoSpaces": {
+    "message": "URLs dürfen keine Leerzeichen enthalten."
+  },
+  "urlNoWildcards": {
+    "message": "Platzhalter (*) sind hier nicht erlaubt – bitte eine konkrete URL eingeben."
+  },
+  "urlInvalid": {
+    "message": "Keine gültige URL."
+  },
+  "urlProtocol": {
+    "message": "Nur http-, https-, file- und chrome-URLs lassen sich öffnen."
+  },
+  "urlCredentials": {
+    "message": "URLs mit Zugangsdaten werden nicht unterstützt."
+  },
+  "optionsTitle": {
+    "message": "Tab Groups by URL – Einstellungen"
+  },
+  "optionsLede": {
+    "message": "Öffnet sich eine Seite, deren URL zu einem Muster passt, landet der Tab automatisch in der passenden Tab-Gruppe – mit dem Namen und der Farbe von hier. Über das Symbol der Erweiterung lässt sich jede Gruppe mit all ihren Seiten auf einmal öffnen."
+  },
+  "externalChange": {
+    "message": "Die Einstellungen wurden inzwischen woanders geändert (z. B. im Popup oder auf einem anderen Gerät)."
+  },
+  "reload": {
+    "message": "Neu laden"
+  },
+  "groupsHeading": {
+    "message": "Gruppen"
+  },
+  "groupsSub": {
+    "message": "In Kategorien sortiert. Passt eine URL zu mehreren Gruppen, gewinnt die <strong>oberste</strong>."
+  },
+  "testHeading": {
+    "message": "URL testen"
+  },
+  "testSub": {
+    "message": "Prüft die aktuellen Einstellungen – auch ungespeicherte Änderungen."
+  },
+  "testLabel": {
+    "message": "Zu testende URL"
+  },
+  "testPlaceholder": {
+    "message": "z. B. https://github.com/meine-firma/projekt"
+  },
+  "behaviorHeading": {
+    "message": "Verhalten"
+  },
+  "setEnabledTitle": {
+    "message": "Tabs automatisch gruppieren"
+  },
+  "setEnabledSub": {
+    "message": "Ist das aus, werden Tabs nur über „Alle Tabs sortieren“ einsortiert."
+  },
+  "setUngroupTitle": {
+    "message": "Tab aus seiner Gruppe nehmen, wenn er die Gruppe verlässt"
+  },
+  "setUngroupSub": {
+    "message": "Wechselt ein Tab zu einer URL, zu der keine Regel passt, wird er aus seiner Gruppe genommen (nur hier verwaltete Gruppen)."
+  },
+  "setListOrderTitle": {
+    "message": "Gruppen in Listenreihenfolge öffnen"
+  },
+  "setListOrderSub": {
+    "message": "„Gruppe öffnen“ setzt eine neue Gruppe in der Tab-Leiste nach der Reihenfolge oben – hinter die Gruppen, die in der Liste vor ihr stehen. Ist das aus, kommt sie ans Ende."
+  },
+  "sortAllNow": {
+    "message": "Alle Tabs jetzt sortieren"
+  },
+  "sortAllHint": {
+    "message": "Sortiert alle schon offenen Tabs in allen Fenstern nach den gespeicherten Regeln."
+  },
+  "syntaxHeading": {
+    "message": "So schreibt man URL-Muster"
+  },
+  "syntaxPattern": {
+    "message": "Muster"
+  },
+  "syntaxMatches": {
+    "message": "Passt auf"
+  },
+  "syntaxDomain": {
+    "message": "github.com und alle Subdomains (www., gist., …), beliebiger Pfad"
+  },
+  "syntaxSubdomains": {
+    "message": "wie <code>atlassian.net</code>"
+  },
+  "syntaxPath": {
+    "message": "nur URLs, die mit diesem Pfad beginnen"
+  },
+  "syntaxWildcard": {
+    "message": "<code>*</code> steht für beliebig viele Zeichen"
+  },
+  "syntaxPort": {
+    "message": "nur dieser Port"
+  },
+  "syntaxScheme": {
+    "message": "mit Schema – <code>http://</code> passt dann nicht"
+  },
+  "syntaxRegex": {
+    "message": "regulärer Ausdruck, geprüft gegen die ganze URL"
+  },
+  "syntaxExclusion": {
+    "message": "Ausschluss: Passt die URL darauf, wird die Gruppe übersprungen"
+  },
+  "syntaxComment": {
+    "message": "Kommentar, wird ignoriert"
+  },
+  "syntaxNote": {
+    "message": "Groß- und Kleinschreibung spielen keine Rolle, ein führendes <code>www.</code> wird ignoriert. Muster (außer regulären Ausdrücken) passen auf den Anfang der URL – alles danach passt automatisch."
+  },
+  "pagesToOpen": {
+    "message": "Zu öffnende Seiten"
+  },
+  "syntaxOpen": {
+    "message": "Konkrete URLs, die „Gruppe öffnen“ als Tabs lädt, z. B. <code>https://github.com/meine-firma/webshop/pulls</code>. Ohne Schema wird <code>https://</code> ergänzt (<code>http://</code> bei <code>localhost</code>, IP-Adressen und URLs mit Port). Ist das Feld leer, werden die URL-Muster geöffnet, die konkrete URLs sind. Seiten, die in der Gruppe schon offen sind, werden nicht doppelt geöffnet; ein leerer „Neuer Tab“ wird für die erste Seite genutzt."
+  },
+  "backupHeading": {
+    "message": "Sichern, übertragen & zurücksetzen"
+  },
+  "backupSub": {
+    "message": "Die Gruppen werden über das Google-Konto synchronisiert, wenn Chrome Sync für Erweiterungen eingeschaltet ist. Sie lassen sich auch in einer Datei sichern – oder alles fängt von vorn an."
+  },
+  "export": {
+    "message": "Exportieren"
+  },
+  "importButton": {
+    "message": "Importieren …"
+  },
+  "resetButton": {
+    "message": "Zurücksetzen …"
+  },
+  "resetTitle": {
+    "message": "Alles zurücksetzen?"
+  },
+  "resetSummary": {
+    "message": "Alle Kategorien und Gruppen werden entfernt, und die Optionen unter „Verhalten“ kehren zu ihren Standardwerten zurück – wie direkt nach der Installation. Gerade offene Tab-Gruppen bleiben, wie sie sind."
+  },
+  "resetSync": {
+    "message": "Nach dem Speichern gilt das auch für jeden Computer, der diese Erweiterung über Chrome Sync synchronisiert. Tipp: Die Gruppen vorher <strong>exportieren</strong>."
+  },
+  "nothingUntilSave": {
+    "message": "Erst „Speichern“ übernimmt die Änderung."
+  },
+  "cancel": {
+    "message": "Abbrechen"
+  },
+  "reset": {
+    "message": "Zurücksetzen"
+  },
+  "importTitle": {
+    "message": "Gruppen importieren"
+  },
+  "importAddTitle": {
+    "message": "Zu meinen Gruppen hinzufügen"
+  },
+  "importAddSub": {
+    "message": "Die eigenen Gruppen und Einstellungen bleiben. Die Gruppen aus der Datei kommen dazu – außer denen, deren Name es in derselben Kategorie schon gibt."
+  },
+  "importReplaceTitle": {
+    "message": "Alle Gruppen ersetzen"
+  },
+  "importReplaceSub": {
+    "message": "Die eigenen Gruppen und Einstellungen werden durch die aus der Datei ersetzt."
+  },
+  "unsavedChanges": {
+    "message": "Ungespeicherte Änderungen"
+  },
+  "unsavedWithErrors": {
+    "message": "Ungespeicherte Änderungen – bitte zuerst die markierten Fehler beheben"
+  },
+  "discard": {
+    "message": "Verwerfen"
+  },
+  "save": {
+    "message": "Speichern"
+  },
+  "noGroupsTitle": {
+    "message": "Noch keine Gruppen"
+  },
+  "noGroupsText": {
+    "message": "Eine Gruppe hinzufügen, ihr einen Namen und eine Farbe geben und die URLs eintragen, die hineingehören."
+  },
+  "categoryEmpty": {
+    "message": "Noch keine Gruppen in dieser Kategorie – eine Gruppe hierher ziehen oder in einer Gruppe diese Kategorie wählen."
+  },
+  "collapse": {
+    "message": "Einklappen"
+  },
+  "expand": {
+    "message": "Ausklappen"
+  },
+  "collapseNamed": {
+    "message": "„$NAME$“ einklappen",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "expandNamed": {
+    "message": "„$NAME$“ ausklappen",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "collapseAll": {
+    "message": "Alle einklappen"
+  },
+  "expandAll": {
+    "message": "Alle ausklappen"
+  },
+  "collapseAllCategories": {
+    "message": "Alle Kategorien einklappen"
+  },
+  "expandAllCategories": {
+    "message": "Alle Kategorien ausklappen"
+  },
+  "moreActions": {
+    "message": "Weitere Aktionen"
+  },
+  "moreActionsFor": {
+    "message": "Weitere Aktionen für „$NAME$“",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "category": {
+    "message": "Kategorie"
+  },
+  "categoryName": {
+    "message": "Name der Kategorie"
+  },
+  "categorySwitch": {
+    "message": "Alle Gruppen dieser Kategorie ein- oder ausschalten"
+  },
+  "active": {
+    "message": "Aktiv"
+  },
+  "paused": {
+    "message": "Pausiert"
+  },
+  "mixed": {
+    "message": "Gemischt"
+  },
+  "collapseCategoryGroups": {
+    "message": "Alle Gruppen dieser Kategorie einklappen"
+  },
+  "expandCategoryGroups": {
+    "message": "Alle Gruppen dieser Kategorie ausklappen"
+  },
+  "addGroup": {
+    "message": "Gruppe hinzufügen"
+  },
+  "addCategory": {
+    "message": "Kategorie hinzufügen"
+  },
+  "moveCategoryUp": {
+    "message": "Kategorie nach oben"
+  },
+  "moveCategoryDown": {
+    "message": "Kategorie nach unten"
+  },
+  "openAllCollapsed": {
+    "message": "Alle eingeklappt öffnen"
+  },
+  "openAllCollapsedHint": {
+    "message": "„Alle öffnen“ legt die Tab-Gruppen eingeklappt an – in der Tab-Leiste stehen nur ihre Namen"
+  },
+  "deleteCategory": {
+    "message": "Kategorie löschen"
+  },
+  "lastCategory": {
+    "message": "Die letzte Kategorie lässt sich nicht löschen"
+  },
+  "dragToReorder": {
+    "message": "Ziehen, um die Reihenfolge zu ändern"
+  },
+  "priority": {
+    "message": "Priorität $RANK$",
+    "placeholders": {
+      "rank": {
+        "content": "$1"
+      }
+    }
+  },
+  "moveUp": {
+    "message": "Nach oben"
+  },
+  "moveDown": {
+    "message": "Nach unten"
+  },
+  "openCollapsed": {
+    "message": "Eingeklappt öffnen"
+  },
+  "openCollapsedHint": {
+    "message": "„Jetzt öffnen“ und das Popup legen diese Tab-Gruppe eingeklappt an – „Alle öffnen“ folgt dem Schalter der Kategorie"
+  },
+  "deleteGroup": {
+    "message": "Gruppe löschen"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "namePlaceholder": {
+    "message": "z. B. Entwicklung"
+  },
+  "showCategory": {
+    "message": "Kategorie im Tab-Titel zeigen"
+  },
+  "urlPatterns": {
+    "message": "URL-Muster"
+  },
+  "onePerLine": {
+    "message": "eins pro Zeile"
+  },
+  "optional": {
+    "message": "optional"
+  },
+  "openUrlsPlaceholder": {
+    "message": "Leer = die URLs aus den URL-Mustern\nz. B. https://github.com/meine-firma/webshop/pulls"
+  },
+  "openNow": {
+    "message": "Jetzt öffnen"
+  },
+  "opensPages_one": {
+    "message": "Öffnet $COUNT$ Seite",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "opensPages_other": {
+    "message": "Öffnet $COUNT$ Seiten",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "fromThePatterns": {
+    "message": "aus den URL-Mustern"
+  },
+  "nothingToOpenHint": {
+    "message": "Nichts zu öffnen – hier URLs eintragen. (Von den URL-Mustern zählen nur konkrete URLs – keine Muster mit *, keine regulären Ausdrücke, keine Ausschlüsse.)"
+  },
+  "lineIssue": {
+    "message": "Zeile $LINE$ „$TEXT$“: $MESSAGE$",
+    "placeholders": {
+      "line": {
+        "content": "$1"
+      },
+      "text": {
+        "content": "$2"
+      },
+      "message": {
+        "content": "$3"
+      }
+    }
+  },
+  "testInvalidUrl": {
+    "message": "Das ist keine gültige URL."
+  },
+  "testHit": {
+    "message": "Landet in $GROUP$ über das Muster $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "testNoMatch": {
+    "message": "Keine Gruppe passt – der Tab bleibt, wo er ist."
+  },
+  "testSkipped": {
+    "message": "Übersprungen: „$NAME$“ wegen des Ausschlusses $PATTERN$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "testPaused": {
+    "message": "Würde auch zu „$NAME$“ passen, aber diese Gruppe ist pausiert.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupRemoved": {
+    "message": "„$NAME$“ entfernt – „Verwerfen“ macht das rückgängig.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "categoryRemoved": {
+    "message": "Kategorie „$NAME$“ entfernt. „Verwerfen“ macht das rückgängig.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "categoryRemovedMoved_one": {
+    "message": "Kategorie „$NAME$“ entfernt – ihre $COUNT$ Gruppe ist jetzt in „$TARGET$“. „Verwerfen“ macht das rückgängig.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      },
+      "target": {
+        "content": "$3"
+      }
+    }
+  },
+  "categoryRemovedMoved_other": {
+    "message": "Kategorie „$NAME$“ entfernt – ihre $COUNT$ Gruppen sind jetzt in „$TARGET$“. „Verwerfen“ macht das rückgängig.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      },
+      "target": {
+        "content": "$3"
+      }
+    }
+  },
+  "fixErrorsFirst": {
+    "message": "Bitte zuerst die rot markierten Fehler beheben."
+  },
+  "saved": {
+    "message": "Gespeichert"
+  },
+  "changesDiscarded": {
+    "message": "Änderungen verworfen"
+  },
+  "importSummary": {
+    "message": "Die Datei enthält $INFILE$, vorhanden sind $CURRENT$.",
+    "placeholders": {
+      "infile": {
+        "content": "$1"
+      },
+      "current": {
+        "content": "$2"
+      }
+    }
+  },
+  "importLoaded": {
+    "message": "Import geladen – bitte prüfen und speichern."
+  },
+  "groupsSkipped_one": {
+    "message": "$COUNT$ Gruppe übersprungen (Name gibt es schon)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsSkipped_other": {
+    "message": "$COUNT$ Gruppen übersprungen (Name gibt es schon)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsAdded_one": {
+    "message": "$COUNT$ Gruppe hinzugefügt",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsAdded_other": {
+    "message": "$COUNT$ Gruppen hinzugefügt",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "importAdded": {
+    "message": "$SUMMARY$ – bitte prüfen und speichern.",
+    "placeholders": {
+      "summary": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingAdded": {
+    "message": "Nichts hinzugefügt – $REASON$.",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "fileHasNoGroups": {
+    "message": "die Datei enthält keine Gruppen"
+  },
+  "resetDone": {
+    "message": "Alles zurückgesetzt – „Speichern“ übernimmt es, „Verwerfen“ macht es rückgängig."
+  },
+  "loadFailed": {
+    "message": "Die Einstellungen ließen sich nicht laden: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "pausedHint": {
+    "message": "Pausiert – Tabs werden nur per Klick auf einen Button sortiert."
+  },
+  "currentTab": {
+    "message": "Aktueller Tab"
+  },
+  "newGroupName": {
+    "message": "Name der neuen Gruppe"
+  },
+  "newGroupCategory": {
+    "message": "Kategorie der neuen Gruppe"
+  },
+  "newGroupColor": {
+    "message": "Farbe der neuen Gruppe"
+  },
+  "assign": {
+    "message": "Zuweisen"
+  },
+  "alreadyAssigned": {
+    "message": "Schon zugewiesen"
+  },
+  "createAndAssign": {
+    "message": "Gruppe anlegen & zuweisen"
+  },
+  "manageGroups": {
+    "message": "Gruppen verwalten"
+  },
+  "unknownPage": {
+    "message": "Unbekannte Seite"
+  },
+  "newTab": {
+    "message": "Neuer Tab"
+  },
+  "localFile": {
+    "message": "Lokale Datei"
+  },
+  "noTabFound": {
+    "message": "Kein Tab gefunden"
+  },
+  "launchLabel": {
+    "message": "„$TITLE$“ öffnen – $PAGES$",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "launchLabelOpen": {
+    "message": "„$TITLE$“ öffnen – $PAGES$, schon offen",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "tagOpen": {
+    "message": "offen"
+  },
+  "tagOpenHint": {
+    "message": "In diesem Fenster schon offen – fehlende Seiten kommen dazu."
+  },
+  "tagPaused": {
+    "message": "pausiert"
+  },
+  "tagPausedHint": {
+    "message": "Tabs kommen gerade nicht automatisch in diese Gruppe."
+  },
+  "openAllOf": {
+    "message": "Alle $COUNT$ Gruppen von „$NAME$“ öffnen",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "belongsTo": {
+    "message": "Gehört zu $GROUP$ über $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "belongsToIn": {
+    "message": "Gehört zu $GROUP$ in $CATEGORY$ über $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "category": {
+        "content": "$2"
+      },
+      "pattern": {
+        "content": "$3"
+      }
+    }
+  },
+  "moveItThere": {
+    "message": "Gerade nicht in der Gruppe – dorthin verschieben"
+  },
+  "noGroupMatches": {
+    "message": "Keine Gruppe passt zu dieser URL."
+  },
+  "notAssignable": {
+    "message": "Diese Seite lässt sich nicht über ihre Domain zuweisen."
+  },
+  "pinnedNeverGrouped": {
+    "message": "Angepinnte Tabs werden nie gruppiert."
+  },
+  "assignDomain": {
+    "message": "Domain $DOMAIN$ zuweisen an",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
+  },
+  "chooseGroup": {
+    "message": "Gruppe wählen …"
+  },
+  "groupPaused": {
+    "message": "$NAME$ (pausiert)",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "newGroupOption": {
+    "message": "Neue Gruppe …"
+  },
+  "nameExists": {
+    "message": "„$NAME$“ gibt es schon – diese Gruppe aus der Liste wählen.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "nameExistsIn": {
+    "message": "„$NAME$“ gibt es in „$CATEGORY$“ schon – diese Gruppe aus der Liste wählen.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "category": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedOk": {
+    "message": "$DOMAIN$ gehört jetzt zu „$NAME$“.",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedShadowed": {
+    "message": "Gespeichert, aber „$WINNER$“ weiter oben gewinnt noch – „$NAME$“ in den Einstellungen darüber schieben.",
+    "placeholders": {
+      "winner": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedExcluded": {
+    "message": "Gespeichert, aber ein Ausschlussmuster in „$NAME$“ verhindert die Zuweisung.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sortTabFailed": {
+    "message": "Sortieren fehlgeschlagen."
+  }
+}

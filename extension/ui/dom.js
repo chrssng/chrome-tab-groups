@@ -1,5 +1,6 @@
 /* Small DOM helpers shared by the settings page and the popup. */
 import { GROUP_COLORS } from '../lib/colors.js';
+import { t } from '../lib/i18n.js';
 
 /** Build an element: h('button', { class: 'btn', onclick }, 'Text', child, …) */
 export function h(tag, attrs = {}, ...children) {
@@ -68,11 +69,11 @@ export function icon(name) {
 /** Tab group label as Chrome shows it */
 export function chip(name, color) {
   const label = name?.trim();
-  return h('span', { class: `chip${label ? '' : ' is-empty'}`, dataset: { color } }, label || 'Unnamed');
+  return h('span', { class: `chip${label ? '' : ' is-empty'}`, dataset: { color } }, label || t('unnamed'));
 }
 
 /** Color picker as a radio group */
-export function swatches(radioName, selected, { label = 'Color' } = {}) {
+export function swatches(radioName, selected, { label = t('color') } = {}) {
   return h(
     'div',
     { class: 'swatches', role: 'radiogroup', 'aria-label': label },
@@ -121,4 +122,59 @@ export function toast(text, kind = 'ok') {
   el.classList.add('is-visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('is-visible'), kind === 'error' ? 6000 : 2600);
+}
+
+/* ---------- Translations ---------- */
+
+/** Tags a text from messages.json may contain (data-i18n-html) – anything else ends up as plain text. */
+const RICH_TAGS = new Set(['CODE', 'STRONG', 'EM', 'KBD']);
+
+/** "Use <code>*</code> for …" → [text, <code>, text]; built from text only, nothing is inserted as HTML. */
+function richText(text) {
+  const body = new DOMParser().parseFromString(text, 'text/html').body;
+  return [...body.childNodes].map((node) =>
+    RICH_TAGS.has(node.nodeName) ? h(node.nodeName.toLowerCase(), {}, node.textContent) : node.textContent,
+  );
+}
+
+/**
+ * Translates the static texts of a page – the attributes name keys in messages.json:
+ *   data-i18n="…"                      → text
+ *   data-i18n-html="…"                 → text with <code>, <strong>, <em>, <kbd>
+ *   data-i18n-attr="placeholder: …; title: …" → attributes
+ */
+export function localize(root = document) {
+  for (const el of root.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  for (const el of root.querySelectorAll('[data-i18n-html]')) el.replaceChildren(...richText(t(el.dataset.i18nHtml)));
+  for (const el of root.querySelectorAll('[data-i18n-attr]')) {
+    for (const pair of el.dataset.i18nAttr.split(';')) {
+      const [attr, key] = pair.split(':').map((part) => part.trim());
+      if (attr && key) el.setAttribute(attr, t(key));
+    }
+  }
+  document.documentElement.lang = t('lang'); // the language of the texts actually used
+}
+
+const MARK = String.fromCharCode(0x2063); // invisible separator – never part of a real text
+const MARKED = new RegExp(`${MARK}(\\d+)${MARK}`);
+
+/**
+ * Like t(), but the substitutions may be elements (or lists of them):
+ * tParts('testHit', chip, code) → ['Goes to ', chip, ' via the pattern ', code].
+ * The order of text and elements follows the language.
+ */
+export function tParts(key, ...substitutions) {
+  const marks = substitutions.map((_, i) => `${MARK}${i}${MARK}`);
+  return t(key, ...marks)
+    .split(MARKED)
+    .map((part, i) => (i % 2 ? substitutions[Number(part)] : part))
+    .filter((part) => part !== '')
+    .flat();
+}
+
+/** tParts() for a row of elements with gaps between them (flex): the texts in between become grey spans. */
+export function mutedParts(key, ...substitutions) {
+  return tParts(key, ...substitutions).map((part) =>
+    typeof part !== 'string' ? part : part.trim() ? h('span', { class: 'muted' }, part.trim()) : null,
+  );
 }

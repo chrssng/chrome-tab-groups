@@ -10,6 +10,7 @@ import {
   sortBySection,
   categoryName,
 } from '../lib/config.js';
+import { t, plural } from '../lib/i18n.js';
 import {
   compileGroups,
   findMatch,
@@ -20,7 +21,9 @@ import {
   urlsToOpen,
   shortUrl,
 } from '../lib/patterns.js';
-import { h, icon, chip, swatches, note, loadIds, storeIds } from './dom.js';
+import { h, icon, chip, swatches, note, loadIds, storeIds, localize, tParts, mutedParts } from './dom.js';
+
+localize();
 
 const $ = (selector) => document.querySelector(selector);
 const NEW = '__new__';
@@ -57,11 +60,10 @@ let pattern = null; // suggested pattern for the current tab's domain
 
 const namedGroups = () => config.groups.filter((g) => g.name);
 const titleOf = (group) => groupTitle(group, config.categories);
-const categoryLabel = (id) => categoryName(config.categories, id) || 'Unnamed category';
+const categoryLabel = (id) => categoryName(config.categories, id) || t('unnamedCategory');
 /** Headings only make sense if the groups are spread over several categories. */
 const severalCategories = (groups) => new Set(groups.map((g) => g.category)).size > 1;
 const sameText = (a, b) => a.trim().toLocaleLowerCase('en') === b.trim().toLocaleLowerCase('en');
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 function matchFor(groups) {
   return url ? findMatch(compileGroups(groups.filter((g) => g.name)), url) : null;
@@ -77,9 +79,9 @@ async function getActiveTab() {
 
 function describePage(address) {
   const parsed = parseUrl(address);
-  if (!parsed) return 'Unknown page';
-  if (/^chrome:\/\/new-?tab/i.test(address)) return 'New Tab';
-  if (parsed.protocol === 'file:') return 'Local file';
+  if (!parsed) return t('unknownPage');
+  if (/^chrome:\/\/new-?tab/i.test(address)) return t('newTab');
+  if (parsed.protocol === 'file:') return t('localFile');
   return parsed.host || address;
 }
 
@@ -114,7 +116,7 @@ async function renderLaunch() {
   const openHere = await openGroupIds(tab?.windowId);
   const rows = (list) =>
     list.map(({ group, urls }) => {
-      const count = plural(urls.length, 'page', 'pages');
+      const count = plural(urls.length, 'page');
       const isOpen = openHere.has(group.id);
       return h(
         'li',
@@ -126,7 +128,7 @@ async function renderLaunch() {
             class: 'launch-row',
             dataset: { id: group.id },
             title: urls.join('\n'),
-            'aria-label': `Open “${titleOf(group)}” – ${count}${isOpen ? ', already open' : ''}`,
+            'aria-label': t(isOpen ? 'launchLabelOpen' : 'launchLabel', titleOf(group), count),
             onclick: () => launch({ type: 'openGroup', groupId: group.id }),
           },
           h(
@@ -135,9 +137,9 @@ async function renderLaunch() {
             chip(titleOf(group), group.color),
             h('span', { class: 'launch-count' }, count),
             isOpen
-              ? h('span', { class: 'tag', title: 'Already open in this window – missing pages will be added.' }, 'open')
+              ? h('span', { class: 'tag', title: t('tagOpenHint') }, t('tagOpen'))
               : null,
-            group.enabled ? null : h('span', { class: 'tag is-muted', title: 'Tabs are currently not added to this group automatically.' }, 'paused'),
+            group.enabled ? null : h('span', { class: 'tag is-muted', title: t('tagPausedHint') }, t('tagPaused')),
           ),
           h('span', { class: 'launch-urls' }, urls.map(shortUrl).join(' · ')),
           icon('launch'),
@@ -155,7 +157,7 @@ async function renderLaunch() {
   for (const category of config.categories) {
     const inside = entries.filter((e) => e.group.category === category.id);
     if (!inside.length) continue;
-    const name = category.name || 'Unnamed category';
+    const name = category.name || t('unnamedCategory');
     const folded = collapsed.has(category.id);
     blocks.push(
       h(
@@ -169,14 +171,14 @@ async function renderLaunch() {
             {
               type: 'button',
               class: 'launch-fold',
-              title: folded ? 'Expand' : 'Collapse',
+              title: t(folded ? 'expand' : 'collapse'),
               'aria-expanded': String(!folded),
               onclick: (event) => toggleCategory(event.currentTarget),
             },
             icon('chevron'),
             icon('folder'),
             h('span', { class: 'launch-cat-name' }, name),
-            h('span', { class: 'launch-cat-count' }, plural(inside.length, 'group', 'groups')), // only while collapsed
+            h('span', { class: 'launch-cat-count' }, plural(inside.length, 'group')), // only while collapsed
           ),
           inside.length > 1
             ? h(
@@ -184,10 +186,10 @@ async function renderLaunch() {
                 {
                   type: 'button',
                   class: 'link-btn launch-all',
-                  'aria-label': `Open all ${inside.length} groups of “${name}”`,
+                  'aria-label': t('openAllOf', inside.length, name),
                   onclick: () => launch({ type: 'openCategory', categoryId: category.id }),
                 },
-                'Open all',
+                t('openAll'),
               )
             : null,
         ),
@@ -206,7 +208,7 @@ function setFolded(block, folded) {
   block.classList.toggle('is-collapsed', folded);
   const button = block.querySelector('.launch-fold');
   button.setAttribute('aria-expanded', String(!folded));
-  button.title = folded ? 'Expand' : 'Collapse';
+  button.title = t(folded ? 'expand' : 'collapse');
   if (folded) collapsed.add(block.dataset.category);
   else collapsed.delete(block.dataset.category);
 }
@@ -223,9 +225,9 @@ function updateFoldAll() {
   const blocks = launchBlocks();
   const anyOpen = blocks.some((b) => !b.classList.contains('is-collapsed'));
   els.foldAll.hidden = !blocks.length;
-  els.foldAll.replaceChildren(icon('chevron'), anyOpen ? 'Collapse all' : 'Expand all');
+  els.foldAll.replaceChildren(icon('chevron'), t(anyOpen ? 'collapseAll' : 'expandAll'));
   els.foldAll.classList.toggle('is-folded', !anyOpen);
-  els.foldAll.setAttribute('aria-label', `${anyOpen ? 'Collapse' : 'Expand'} all categories`);
+  els.foldAll.setAttribute('aria-label', t(anyOpen ? 'collapseAllCategories' : 'expandAllCategories'));
 }
 
 els.foldAll.addEventListener('click', () => {
@@ -249,13 +251,14 @@ async function renderStatus() {
       h(
         'div',
         { class: 'status-line' },
-        h('span', { class: 'muted' }, 'Belongs to'),
-        chip(titleOf(match.group), match.group.color),
         inCategory
-          ? [h('span', { class: 'muted' }, 'in'), h('span', { class: 'status-cat' }, icon('folder'), categoryLabel(match.group.category))]
-          : null,
-        h('span', { class: 'muted' }, 'via'),
-        h('code', {}, match.pattern),
+          ? mutedParts(
+              'belongsToIn',
+              chip(titleOf(match.group), match.group.color),
+              h('span', { class: 'status-cat' }, icon('folder'), categoryLabel(match.group.category)),
+              h('code', {}, match.pattern),
+            )
+          : mutedParts('belongsTo', chip(titleOf(match.group), match.group.color), h('code', {}, match.pattern)),
       ),
     );
     if (!tab.pinned && (await groupTitleOf(tab)) !== titleOf(match.group)) {
@@ -263,14 +266,14 @@ async function renderStatus() {
         h(
           'button',
           { type: 'button', class: 'link-btn', onclick: sortThisTab },
-          'Not in the group right now – move it there',
+          t('moveItThere'),
         ),
       );
     }
   } else {
-    parts.push(h('span', { class: 'muted' }, pattern ? 'No group matches this URL.' : 'This page can’t be assigned by domain.'));
+    parts.push(h('span', { class: 'muted' }, t(pattern ? 'noGroupMatches' : 'notAssignable')));
   }
-  if (tab?.pinned) parts.push(h('span', { class: 'muted small' }, 'Pinned tabs are never grouped.'));
+  if (tab?.pinned) parts.push(h('span', { class: 'muted small' }, t('pinnedNeverGrouped')));
   els.status.replaceChildren(...parts);
 }
 
@@ -278,21 +281,21 @@ function renderAssign() {
   els.assign.hidden = !pattern;
   if (!pattern) return;
 
-  els.assignLabel.replaceChildren('Assign domain ', h('code', {}, pattern), ' to');
+  els.assignLabel.replaceChildren(...tParts('assignDomain', h('code', {}, pattern)));
   const groups = namedGroups();
   const match = matchFor(config.groups);
   const options = [];
-  if (groups.length && !match) options.push(h('option', { value: '', disabled: true }, 'Choose a group …'));
-  const option = (g) => h('option', { value: g.id }, g.enabled ? g.name : `${g.name} (paused)`);
+  if (groups.length && !match) options.push(h('option', { value: '', disabled: true }, t('chooseGroup')));
+  const option = (g) => h('option', { value: g.id }, g.enabled ? g.name : t('groupPaused', g.name));
   if (severalCategories(groups)) {
     for (const category of config.categories) {
       const inside = groups.filter((g) => g.category === category.id);
-      if (inside.length) options.push(h('optgroup', { label: category.name || 'Unnamed category' }, inside.map(option)));
+      if (inside.length) options.push(h('optgroup', { label: category.name || t('unnamedCategory') }, inside.map(option)));
     }
   } else {
     options.push(...groups.map(option));
   }
-  options.push(h('option', { value: NEW }, 'New group …'));
+  options.push(h('option', { value: NEW }, t('newGroupOption')));
   els.target.replaceChildren(...options);
   els.target.value = match ? match.group.id : groups.length ? '' : NEW;
   onTargetChange();
@@ -305,7 +308,7 @@ function onTargetChange() {
   els.newError.hidden = true;
   if (isNew && !els.newName.value) els.newName.value = suggestName(parseUrl(url)?.host ?? '');
   if (isNew && !els.newColor.firstChild) {
-    els.newColor.append(swatches('new-color', nextFreeColor(config.groups), { label: 'Color of the new group' }));
+    els.newColor.append(swatches('new-color', nextFreeColor(config.groups), { label: t('newGroupColor') }));
   }
   const match = matchFor(config.groups);
   if (isNew && !els.newCategory.options.length) {
@@ -317,7 +320,7 @@ function onTargetChange() {
 
   const already = !isNew && match && match.group.id === value;
   els.assignBtn.disabled = !value || already;
-  els.assignBtn.textContent = already ? 'Already assigned' : isNew ? 'Create group & assign' : 'Assign';
+  els.assignBtn.textContent = t(already ? 'alreadyAssigned' : isNew ? 'createAndAssign' : 'assign');
 }
 
 /* ---------- Actions ---------- */
@@ -328,17 +331,17 @@ async function launch(message) {
   rows.forEach((row) => (row.disabled = true));
   try {
     const result = await chrome.runtime.sendMessage({ ...message, windowId: tab?.windowId });
-    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
+    if (!result?.ok) throw new Error(result?.error ?? t('unknownError'));
     if (result.failed?.length) {
       showMessage(
         'warn',
-        `${plural(result.opened, 'page', 'pages')} opened – could not open: ${result.failed.map(shortUrl).join(', ')}`,
+        `${plural(result.opened, 'pagesOpened')} – ${t('couldNotOpen', result.failed.map(shortUrl).join(', '))}`,
       );
       return;
     }
     window.close(); // the group is open and active – the popup is no longer needed
   } catch (err) {
-    showMessage('error', `Opening failed: ${err.message}`);
+    showMessage('error', t('openingFailed', err.message));
   } finally {
     rows.forEach((row) => (row.disabled = false));
   }
@@ -352,7 +355,7 @@ async function refreshTab() {
 async function sortThisTab() {
   const result = await chrome.runtime.sendMessage({ type: 'sortTab', tabId: tab.id });
   if (!result?.ok) {
-    showMessage('error', result?.error ?? 'Sorting failed.');
+    showMessage('error', result?.error ?? t('sortTabFailed'));
     return;
   }
   await refreshTab();
@@ -370,11 +373,12 @@ async function assign(event) {
   if (targetId === NEW) {
     const name = els.newName.value.trim();
     const category = els.newCategory.value || config.categories[0].id;
-    const where = config.categories.length > 1 ? ` in “${categoryLabel(category)}”` : '';
     const error = !name
-      ? 'Please enter a name.'
+      ? t('valGroupName')
       : groups.some((g) => g.category === category && sameText(g.name, name))
-        ? `“${name}” already exists${where} – pick that group from the list.`
+        ? config.categories.length > 1
+          ? t('nameExistsIn', name, categoryLabel(category))
+          : t('nameExists', name)
         : null;
     if (error) {
       els.newError.textContent = error;
@@ -413,11 +417,11 @@ async function assign(event) {
     await refreshTab();
     const final = matchFor(config.groups);
     if (final?.group.id === target.id) {
-      showMessage('ok', `${pattern} now belongs to “${target.name}”.`);
+      showMessage('ok', t('assignedOk', pattern, target.name));
     } else if (final) {
-      showMessage('warn', `Saved, but “${final.group.name}” further up still wins – move “${target.name}” above it in the settings.`);
+      showMessage('warn', t('assignedShadowed', final.group.name, target.name));
     } else {
-      showMessage('warn', `Saved, but an exclusion pattern in “${target.name}” prevents the assignment.`);
+      showMessage('warn', t('assignedExcluded', target.name));
     }
     els.newName.value = '';
     els.newColor.replaceChildren();
@@ -446,26 +450,26 @@ els.enabled.addEventListener('change', async () => {
   }
 });
 
-els.sortAll.append(icon('sort'), 'Sort all tabs');
+els.sortAll.append(icon('sort'), t('sortAll'));
 els.sortAll.addEventListener('click', async () => {
   els.sortAll.disabled = true;
   try {
     const result = await chrome.runtime.sendMessage({ type: 'sortAll' });
-    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
+    if (!result?.ok) throw new Error(result?.error ?? t('unknownError'));
     const parts = [];
-    if (result.moved) parts.push(`${plural(result.moved, 'tab', 'tabs')} sorted into groups`);
-    if (result.ungrouped) parts.push(`${plural(result.ungrouped, 'tab', 'tabs')} removed from groups`);
-    showMessage('ok', parts.length ? `${parts.join(', ')}.` : 'Everything is already sorted.');
+    if (result.moved) parts.push(plural(result.moved, 'tabsSorted'));
+    if (result.ungrouped) parts.push(plural(result.ungrouped, 'tabsUngrouped'));
+    showMessage('ok', parts.length ? `${parts.join(', ')}.` : t('alreadySorted'));
     await refreshTab();
     await renderStatus();
   } catch (err) {
-    showMessage('error', `Sorting failed: ${err.message}`);
+    showMessage('error', t('sortingFailed', err.message));
   } finally {
     els.sortAll.disabled = false;
   }
 });
 
-els.manage.append(icon('sliders'), 'Manage groups');
+els.manage.append(icon('sliders'), t('manageGroups'));
 els.manage.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
   window.close();
@@ -482,7 +486,7 @@ async function init() {
   els.paused.hidden = config.settings.enabled;
   await renderLaunch();
   if (!tab) {
-    els.host.textContent = 'No tab found';
+    els.host.textContent = t('noTabFound');
     return;
   }
   url = tab.url || tab.pendingUrl || '';

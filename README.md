@@ -13,6 +13,7 @@ Chrome extension: when you open a page whose URL matches a pattern, the tab auto
 - **[Popup](docs/popup.md)** – pause/resume, open groups (in collapsible categories), see where the current tab belongs, assign its domain to a group.
 - **[Settings page](docs/settings.md)** – edit, reorder (drag & drop), collapse and pause groups, test any URL live.
 - **[Backup, sync & import](docs/backup-and-sync.md)** – via Chrome sync, plus export/import as JSON – and a reset to start over.
+- **[English and German](docs/README.md#language)** – the extension follows the language of Chrome.
 
 ![Settings page: groups sorted into categories – one expanded with name, category, color, URL patterns and pages to open](docs/options.png)
 
@@ -40,6 +41,8 @@ extension/            ← load this folder in Chrome
   lib/patterns.js     URL patterns and URLs to open (no chrome.* – also testable in Node)
   lib/config.js       loading/saving/validating the settings
   lib/colors.js       the nine Chrome group colors
+  lib/i18n.js         t() and plural() – the texts in the language of Chrome
+  _locales/en, de     messages.json: every text of the extension, per language
   options.html        settings page (ui/options.js, ui/options.css)
   popup.html          popup with “Open group” (ui/popup.js, ui/popup.css)
   ui/shared.css       shared styles, light/dark
@@ -47,6 +50,8 @@ docs/                 user documentation and screenshots
 tests/
   patterns.test.mjs   unit tests for the pattern logic
   config.test.mjs     unit tests for categories, import/export and validation
+  i18n.test.mjs       all languages have the same texts, every text is used
+  i18n-setup.mjs      gives the unit tests the English texts
   e2e.mjs             end-to-end test in a real Chromium
   sample-groups.json  sample settings for trying out the features
 ```
@@ -57,8 +62,10 @@ No build step, no runtime dependencies – plain JavaScript (ES modules). After 
 npm test                          # unit tests (Node 20+)
 npm install                       # only needed for the E2E test (Playwright)
 npx playwright install chromium
-npm run test:e2e                  # 91 checks in a real Chromium, no internet needed
+npm run test:e2e                  # 95 checks in a real Chromium (English, plus a German round), no internet needed
 ```
+
+**Texts:** nothing user-facing is written in the code – every text is a key in [`extension/_locales/en/messages.json`](extension/_locales/en/messages.json), with its translation under the same key in [`de/messages.json`](extension/_locales/de/messages.json). In the code, `t('key', …)` and `plural(count, 'key')` (from `lib/i18n.js`) look them up – `plural` picks `key_one` or `key_other`. HTML pages use `data-i18n="key"` (text), `data-i18n-html="key"` (text with `<code>`/`<strong>`) and `data-i18n-attr="placeholder: key"`; texts with elements in the middle of a sentence are built with `tParts()` from `ui/dom.js`. Parameters are named placeholders (`$NAME$` with `"placeholders": { "name": { "content": "$1" } }`), so each language can put them where its grammar wants them. `npm test` fails if a language misses a key or a placeholder, or if a text is unused.
 
 Debugging: on `chrome://extensions`, click **Service Worker** on the extension's entry – this opens DevTools for `background.js`.
 

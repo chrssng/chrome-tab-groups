@@ -15,12 +15,16 @@
  * which group wins.
  */
 import { COLOR_IDS, isValidColor } from './colors.js';
+import { t } from './i18n.js';
 import { compileGroups, findMatch, sampleUrl, toOpenUrl } from './patterns.js';
 
 export const SETTINGS_KEY = 'settings';
 export const GROUP_PREFIX = 'group:';
-/** Fixed ID, so every part of the extension means the same “Default” before it is ever saved. */
-export const DEFAULT_CATEGORY = Object.freeze({ id: 'default', name: 'Default', openCollapsed: false });
+/**
+ * Fixed ID, so every part of the extension means the same “Default” before it
+ * is ever saved. Its name is in the language of the browser (“Standard” in German).
+ */
+export const DEFAULT_CATEGORY = Object.freeze({ id: 'default', name: t('defaultCategory'), openCollapsed: false });
 export const DEFAULT_SETTINGS = Object.freeze({ enabled: true, ungroupOnLeave: false, openInListOrder: false });
 
 const storage = () => chrome.storage.sync;
@@ -176,15 +180,15 @@ export async function saveSettings(patch) {
 function explainStorageError(err) {
   const message = String(err?.message ?? err);
   if (/QUOTA_BYTES_PER_ITEM/i.test(message)) {
-    return 'A group has too many patterns – Chrome sync allows at most 8 KB per group. Split it into several groups.';
+    return t('errTooManyPatterns');
   }
   if (/QUOTA_BYTES/i.test(message)) {
-    return 'The settings are too large for Chrome sync (max. 100 KB).';
+    return t('errSettingsTooLarge');
   }
   if (/MAX_WRITE_OPERATIONS/i.test(message)) {
-    return 'Too many saves in a short time – please try again in a minute.';
+    return t('errTooManySaves');
   }
-  return `Saving failed: ${message}`;
+  return t('errSaveFailed', message);
 }
 
 /* ---------- Titles in the tab strip ---------- */
@@ -242,10 +246,10 @@ export function fromImport(text) {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('The file is not valid JSON.');
+    throw new Error(t('errImportJson'));
   }
   const list = Array.isArray(data) ? data : data?.groups;
-  if (!Array.isArray(list)) throw new Error('No groups found in the file.');
+  if (!Array.isArray(list)) throw new Error(t('errImportNoGroups'));
 
   const categories = [];
   const categoryFor = (name) => {
@@ -329,9 +333,9 @@ export function validateConfig(config) {
   for (const c of categories) {
     const key = nameKey(c.name);
     const error = !key
-      ? 'Please enter a name for the category.'
+      ? t('valCategoryName')
       : seenCategories.has(key)
-        ? `The category “${c.name.trim()}” already exists.`
+        ? t('valCategoryExists', c.name.trim())
         : null;
     seenCategories.add(key);
     if (error) {
@@ -364,9 +368,9 @@ export function validateConfig(config) {
 
     const key = nameKey(group.name);
     if (!key) {
-      item.nameError = 'Please enter a name.';
+      item.nameError = t('valGroupName');
     } else if (seenNames.has(scopedNameKey(group))) {
-      item.nameError = `The name “${group.name.trim()}” already exists in this category.`;
+      item.nameError = t('valGroupExists', group.name.trim());
     } else {
       seenNames.add(scopedNameKey(group));
     }
@@ -374,27 +378,22 @@ export function validateConfig(config) {
 
     const twins = key ? (byTitle.get(groupTitle(group, categories)) ?? []).filter((g) => g !== group) : [];
     if (twins.length && !item.nameError) {
-      const where = twins.map((g) => `“${categoryName(categories, g.category) || 'Unnamed category'}”`).join(', ');
-      item.titleWarning =
-        `The group “${group.name.trim()}” in ${where} has the same title in the tab strip. ` +
-        (twins.some((g) => g.color === group.color)
-          ? 'Give them different colors or show the category in the title – otherwise their tabs can end up in the same group.'
-          : 'They are told apart by their color – or show the category in the title.');
+      const where = twins.map((g) => t('quoted', categoryName(categories, g.category) || t('unnamedCategory'))).join(', ');
+      item.titleWarning = `${t('valTitleTwin', group.name.trim(), where)} ${
+        twins.some((g) => g.color === group.color) ? t('valTitleTwinSameColor') : t('valTitleTwinByColor')
+      }`;
     }
 
     const hasOpenUrls = (group.openUrls ?? []).some((l) => String(l).trim() && !String(l).trim().startsWith('#'));
     if (!entry.include.length) {
-      if (!hasOpenUrls) item.warnings.push('No URL pattern yet – tabs will never be added to this group automatically.');
+      if (!hasOpenUrls) item.warnings.push(t('valNoPatterns'));
     } else if (group.enabled !== false) {
       const above = compiled.slice(0, index);
       for (const pattern of entry.include) {
         const sample = sampleUrl(pattern.raw);
         const hit = sample && findMatch(above, sample);
         if (hit) {
-          item.warnings.push(
-            `“${pattern.raw}” is already caught by “${hit.group.name || 'Unnamed'}” further up – ` +
-              'move this group up or add an exclusion pattern (!) there.',
-          );
+          item.warnings.push(t('valShadowed', pattern.raw, hit.group.name || t('unnamed')));
         }
       }
     }

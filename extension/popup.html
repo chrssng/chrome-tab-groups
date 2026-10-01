@@ -3,33 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="color-scheme" content="light dark">
-  <title>Tab Groups</title>
+  <!-- Texts: data-i18n* → _locales/<language>/messages.json, filled in by localize() in ui/dom.js -->
+  <title data-i18n="extShortName"></title>
   <link rel="stylesheet" href="ui/shared.css">
   <link rel="stylesheet" href="ui/popup.css">
 </head>
 <body>
   <header class="head">
     <img src="icons/icon32.png" width="20" height="20" alt="">
-    <h1>Tab Groups</h1>
-    <label class="switch" title="Group tabs automatically">
+    <h1 data-i18n="extShortName"></h1>
+    <label class="switch" data-i18n-attr="title: setEnabledTitle">
       <input type="checkbox" id="enabled">
       <span class="track" aria-hidden="true"></span>
-      <span class="sr-only">Group tabs automatically</span>
+      <span class="sr-only" data-i18n="setEnabledTitle"></span>
     </label>
   </header>
 
-  <p id="paused" class="paused" hidden>Paused – tabs are only sorted when you click a button.</p>
+  <p id="paused" class="paused" hidden data-i18n="pausedHint"></p>
 
   <section class="launch" id="launch" aria-labelledby="launch-label" hidden>
     <div class="launch-top">
-      <div class="eyebrow" id="launch-label">Open group</div>
+      <div class="eyebrow" id="launch-label" data-i18n="openGroup"></div>
       <button type="button" class="link-btn" id="fold-all" hidden></button>
     </div>
     <ul class="launch-list" id="launch-list"></ul>
   </section>
 
   <section class="current" aria-labelledby="current-label">
-    <div class="eyebrow" id="current-label">Current tab</div>
+    <div class="eyebrow" id="current-label" data-i18n="currentTab"></div>
     <div class="host" id="host">…</div>
     <div class="status" id="status"></div>
   </section>
@@ -39,12 +40,12 @@
     <select id="target" class="select"></select>
     <div id="new-group" class="new-group" hidden>
       <input id="new-name" class="input" type="text" maxlength="60" autocomplete="off"
-             placeholder="Name of the new group" aria-label="Name of the new group">
-      <select id="new-category" class="select" aria-label="Category of the new group" hidden></select>
+             data-i18n-attr="placeholder: newGroupName; aria-label: newGroupName">
+      <select id="new-category" class="select" data-i18n-attr="aria-label: newGroupCategory" hidden></select>
       <div id="new-color"></div>
       <div id="new-error" class="field-error" role="alert" hidden></div>
     </div>
-    <button type="submit" class="btn primary" id="assign-btn">Assign</button>
+    <button type="submit" class="btn primary" id="assign-btn" data-i18n="assign"></button>
   </form>
 
   <footer class="actions">

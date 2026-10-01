@@ -1,0 +1,1051 @@
+{
+  "lang": {
+    "message": "en"
+  },
+  "extName": {
+    "message": "Tab Groups by URL"
+  },
+  "extShortName": {
+    "message": "Tab Groups"
+  },
+  "extDescription": {
+    "message": "Automatically sorts tabs into predefined tab groups with name and color, based on their URL."
+  },
+  "actionTitlePaused": {
+    "message": "Tab Groups by URL (paused)"
+  },
+  "badgeOff": {
+    "message": "off"
+  },
+  "unnamed": {
+    "message": "Unnamed"
+  },
+  "unnamedCategory": {
+    "message": "Unnamed category"
+  },
+  "defaultCategory": {
+    "message": "Default"
+  },
+  "quoted": {
+    "message": "“$TEXT$”",
+    "placeholders": {
+      "text": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "Unknown error"
+  },
+  "color": {
+    "message": "Color"
+  },
+  "colorGrey": {
+    "message": "Grey"
+  },
+  "colorBlue": {
+    "message": "Blue"
+  },
+  "colorRed": {
+    "message": "Red"
+  },
+  "colorYellow": {
+    "message": "Yellow"
+  },
+  "colorGreen": {
+    "message": "Green"
+  },
+  "colorPink": {
+    "message": "Pink"
+  },
+  "colorPurple": {
+    "message": "Purple"
+  },
+  "colorCyan": {
+    "message": "Cyan"
+  },
+  "colorOrange": {
+    "message": "Orange"
+  },
+  "group_one": {
+    "message": "$COUNT$ group",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "group_other": {
+    "message": "$COUNT$ groups",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "page_one": {
+    "message": "$COUNT$ page",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "page_other": {
+    "message": "$COUNT$ pages",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "openGroup": {
+    "message": "Open group"
+  },
+  "openAll": {
+    "message": "Open all"
+  },
+  "pagesOpened_one": {
+    "message": "$COUNT$ page opened",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "pagesOpened_other": {
+    "message": "$COUNT$ pages opened",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "allAlreadyOpen": {
+    "message": "all pages were already open"
+  },
+  "couldNotOpen": {
+    "message": "could not open: $URLS$",
+    "placeholders": {
+      "urls": {
+        "content": "$1"
+      }
+    }
+  },
+  "openResult": {
+    "message": "“$NAME$”: $DETAILS$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "details": {
+        "content": "$2"
+      }
+    }
+  },
+  "openingFailed": {
+    "message": "Opening failed: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "sortAll": {
+    "message": "Sort all tabs"
+  },
+  "tabsSorted_one": {
+    "message": "$COUNT$ tab sorted into groups",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsSorted_other": {
+    "message": "$COUNT$ tabs sorted into groups",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsUngrouped_one": {
+    "message": "$COUNT$ tab removed from groups",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "tabsUngrouped_other": {
+    "message": "$COUNT$ tabs removed from groups",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "alreadySorted": {
+    "message": "Everything is already sorted."
+  },
+  "sortingFailed": {
+    "message": "Sorting failed: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupGone": {
+    "message": "This group no longer exists."
+  },
+  "categoryGone": {
+    "message": "This category no longer exists."
+  },
+  "nothingToOpenGroup": {
+    "message": "There is no URL to open for “$NAME$”.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingToOpenCategory": {
+    "message": "There is nothing to open in “$NAME$”.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "errTooManyPatterns": {
+    "message": "A group has too many patterns – Chrome sync allows at most 8 KB per group. Split it into several groups."
+  },
+  "errSettingsTooLarge": {
+    "message": "The settings are too large for Chrome sync (max. 100 KB)."
+  },
+  "errTooManySaves": {
+    "message": "Too many saves in a short time – please try again in a minute."
+  },
+  "errSaveFailed": {
+    "message": "Saving failed: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "errImportJson": {
+    "message": "The file is not valid JSON."
+  },
+  "errImportNoGroups": {
+    "message": "No groups found in the file."
+  },
+  "valCategoryName": {
+    "message": "Please enter a name for the category."
+  },
+  "valCategoryExists": {
+    "message": "The category “$NAME$” already exists.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "valGroupName": {
+    "message": "Please enter a name."
+  },
+  "valGroupExists": {
+    "message": "The name “$NAME$” already exists in this category.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "valTitleTwin": {
+    "message": "The group “$NAME$” in $CATEGORIES$ has the same title in the tab strip.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "categories": {
+        "content": "$2"
+      }
+    }
+  },
+  "valTitleTwinSameColor": {
+    "message": "Give them different colors or show the category in the title – otherwise their tabs can end up in the same group."
+  },
+  "valTitleTwinByColor": {
+    "message": "They are told apart by their color – or show the category in the title."
+  },
+  "valNoPatterns": {
+    "message": "No URL pattern yet – tabs will never be added to this group automatically."
+  },
+  "valShadowed": {
+    "message": "“$PATTERN$” is already caught by “$GROUP$” further up – move this group up or add an exclusion pattern (!) there.",
+    "placeholders": {
+      "pattern": {
+        "content": "$1"
+      },
+      "group": {
+        "content": "$2"
+      }
+    }
+  },
+  "patEmptyExclusion": {
+    "message": "Empty exclusion pattern."
+  },
+  "patInvalidRegex": {
+    "message": "Invalid regular expression ($REASON$).",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "patNoSpaces": {
+    "message": "Patterns must not contain spaces."
+  },
+  "patDomainMissing": {
+    "message": "Domain missing (use * for any domain)."
+  },
+  "patInvalidDomain": {
+    "message": "Invalid domain “$DOMAIN$”.",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
+  },
+  "urlNoPatterns": {
+    "message": "Only concrete URLs are allowed here, no patterns."
+  },
+  "urlNoSpaces": {
+    "message": "URLs must not contain spaces."
+  },
+  "urlNoWildcards": {
+    "message": "Wildcards (*) are not allowed here – please enter a concrete URL."
+  },
+  "urlInvalid": {
+    "message": "Not a valid URL."
+  },
+  "urlProtocol": {
+    "message": "Only http, https, file and chrome URLs can be opened."
+  },
+  "urlCredentials": {
+    "message": "URLs with credentials are not supported."
+  },
+  "optionsTitle": {
+    "message": "Tab Groups by URL – Settings"
+  },
+  "optionsLede": {
+    "message": "When you open a page whose URL matches a pattern, the tab automatically lands in the matching tab group – with the name and color you set here. Click the extension’s icon to open any group with all its pages in one go."
+  },
+  "externalChange": {
+    "message": "The settings have been changed elsewhere in the meantime (e.g. from the popup or on another device)."
+  },
+  "reload": {
+    "message": "Reload"
+  },
+  "groupsHeading": {
+    "message": "Groups"
+  },
+  "groupsSub": {
+    "message": "Sorted into categories. If a URL matches several groups, the <strong>topmost</strong> one wins."
+  },
+  "testHeading": {
+    "message": "Test a URL"
+  },
+  "testSub": {
+    "message": "Checks the current settings – including unsaved changes."
+  },
+  "testLabel": {
+    "message": "URL to test"
+  },
+  "testPlaceholder": {
+    "message": "e.g. https://github.com/my-company/project"
+  },
+  "behaviorHeading": {
+    "message": "Behavior"
+  },
+  "setEnabledTitle": {
+    "message": "Group tabs automatically"
+  },
+  "setEnabledSub": {
+    "message": "When this is off, tabs are only sorted when you choose “Sort all tabs”."
+  },
+  "setUngroupTitle": {
+    "message": "Remove a tab from its group when it leaves the group"
+  },
+  "setUngroupSub": {
+    "message": "If a tab navigates to a URL that no rule matches, it is taken out of its group (only groups managed here)."
+  },
+  "setListOrderTitle": {
+    "message": "Open groups in list order"
+  },
+  "setListOrderSub": {
+    "message": "“Open group” places a new group in the tab strip according to the order above – after the groups that come before it in the list. When this is off, it is added at the end."
+  },
+  "sortAllNow": {
+    "message": "Sort all tabs now"
+  },
+  "sortAllHint": {
+    "message": "Sorts all tabs that are already open, in all windows, according to the saved rules."
+  },
+  "syntaxHeading": {
+    "message": "How to write URL patterns"
+  },
+  "syntaxPattern": {
+    "message": "Pattern"
+  },
+  "syntaxMatches": {
+    "message": "Matches"
+  },
+  "syntaxDomain": {
+    "message": "github.com and all subdomains (www., gist., …), any path"
+  },
+  "syntaxSubdomains": {
+    "message": "same as <code>atlassian.net</code>"
+  },
+  "syntaxPath": {
+    "message": "only URLs that start with this path"
+  },
+  "syntaxWildcard": {
+    "message": "<code>*</code> stands for any number of characters"
+  },
+  "syntaxPort": {
+    "message": "only this port"
+  },
+  "syntaxScheme": {
+    "message": "with scheme – <code>http://</code> doesn’t match then"
+  },
+  "syntaxRegex": {
+    "message": "regular expression, tested against the full URL"
+  },
+  "syntaxExclusion": {
+    "message": "exclusion: if the URL matches it, the group is skipped"
+  },
+  "syntaxComment": {
+    "message": "comment, ignored"
+  },
+  "syntaxNote": {
+    "message": "Matching is case-insensitive, and a leading <code>www.</code> is ignored. Patterns (except regular expressions) match the beginning of the URL – anything after that matches automatically."
+  },
+  "pagesToOpen": {
+    "message": "Pages to open"
+  },
+  "syntaxOpen": {
+    "message": "Concrete URLs that “Open group” loads as tabs, e.g. <code>https://github.com/my-company/webshop/pulls</code>. Without a scheme, <code>https://</code> is added (<code>http://</code> for <code>localhost</code>, IP addresses and URLs with a port). If the field is empty, the URL patterns that are concrete URLs are opened. Pages that are already open in the group are not opened twice; an empty “New Tab” is used for the first page."
+  },
+  "backupHeading": {
+    "message": "Back up, transfer & reset"
+  },
+  "backupSub": {
+    "message": "Your groups are synced via your Google account if Chrome sync is turned on for extensions. You can also back them up to a file – or start over from scratch."
+  },
+  "export": {
+    "message": "Export"
+  },
+  "importButton": {
+    "message": "Import …"
+  },
+  "resetButton": {
+    "message": "Reset …"
+  },
+  "resetTitle": {
+    "message": "Reset everything?"
+  },
+  "resetSummary": {
+    "message": "All categories and groups are removed, and the Behavior options go back to their defaults – as right after installing. Tab groups that are open right now stay as they are."
+  },
+  "resetSync": {
+    "message": "After saving, this also applies to every computer that syncs this extension via Chrome sync. Tip: <strong>Export</strong> your groups first."
+  },
+  "nothingUntilSave": {
+    "message": "Nothing changes until you click “Save”."
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "reset": {
+    "message": "Reset"
+  },
+  "importTitle": {
+    "message": "Import groups"
+  },
+  "importAddTitle": {
+    "message": "Add to my groups"
+  },
+  "importAddSub": {
+    "message": "Your groups and settings stay. The groups from the file are added – except those whose name already exists in the same category."
+  },
+  "importReplaceTitle": {
+    "message": "Replace all groups"
+  },
+  "importReplaceSub": {
+    "message": "Your groups and settings are replaced by those from the file."
+  },
+  "unsavedChanges": {
+    "message": "Unsaved changes"
+  },
+  "unsavedWithErrors": {
+    "message": "Unsaved changes – please fix the marked errors first"
+  },
+  "discard": {
+    "message": "Discard"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "noGroupsTitle": {
+    "message": "No groups yet"
+  },
+  "noGroupsText": {
+    "message": "Add a group, give it a name and a color, and enter the URLs that belong in it."
+  },
+  "categoryEmpty": {
+    "message": "No groups in this category yet – drag a group here, or choose this category in a group."
+  },
+  "collapse": {
+    "message": "Collapse"
+  },
+  "expand": {
+    "message": "Expand"
+  },
+  "collapseNamed": {
+    "message": "Collapse “$NAME$”",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "expandNamed": {
+    "message": "Expand “$NAME$”",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "collapseAll": {
+    "message": "Collapse all"
+  },
+  "expandAll": {
+    "message": "Expand all"
+  },
+  "collapseAllCategories": {
+    "message": "Collapse all categories"
+  },
+  "expandAllCategories": {
+    "message": "Expand all categories"
+  },
+  "moreActions": {
+    "message": "More actions"
+  },
+  "moreActionsFor": {
+    "message": "More actions for “$NAME$”",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "category": {
+    "message": "Category"
+  },
+  "categoryName": {
+    "message": "Name of the category"
+  },
+  "categorySwitch": {
+    "message": "Turn all groups of this category on or off"
+  },
+  "active": {
+    "message": "Active"
+  },
+  "paused": {
+    "message": "Paused"
+  },
+  "mixed": {
+    "message": "Mixed"
+  },
+  "collapseCategoryGroups": {
+    "message": "Collapse all groups of this category"
+  },
+  "expandCategoryGroups": {
+    "message": "Expand all groups of this category"
+  },
+  "addGroup": {
+    "message": "Add group"
+  },
+  "addCategory": {
+    "message": "Add category"
+  },
+  "moveCategoryUp": {
+    "message": "Move category up"
+  },
+  "moveCategoryDown": {
+    "message": "Move category down"
+  },
+  "openAllCollapsed": {
+    "message": "Open all collapsed"
+  },
+  "openAllCollapsedHint": {
+    "message": "“Open all” creates the tab groups collapsed – only their names show in the tab strip"
+  },
+  "deleteCategory": {
+    "message": "Delete category"
+  },
+  "lastCategory": {
+    "message": "The last category can’t be deleted"
+  },
+  "dragToReorder": {
+    "message": "Drag to change the order"
+  },
+  "priority": {
+    "message": "Priority $RANK$",
+    "placeholders": {
+      "rank": {
+        "content": "$1"
+      }
+    }
+  },
+  "moveUp": {
+    "message": "Move up"
+  },
+  "moveDown": {
+    "message": "Move down"
+  },
+  "openCollapsed": {
+    "message": "Open collapsed"
+  },
+  "openCollapsedHint": {
+    "message": "“Open now” and the popup create this tab group collapsed – “Open all” follows the category’s own switch"
+  },
+  "deleteGroup": {
+    "message": "Delete group"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "namePlaceholder": {
+    "message": "e.g. Development"
+  },
+  "showCategory": {
+    "message": "Show the category in the tab title"
+  },
+  "urlPatterns": {
+    "message": "URL patterns"
+  },
+  "onePerLine": {
+    "message": "one per line"
+  },
+  "optional": {
+    "message": "optional"
+  },
+  "openUrlsPlaceholder": {
+    "message": "Empty = the URLs from the URL patterns\ne.g. https://github.com/my-company/webshop/pulls"
+  },
+  "openNow": {
+    "message": "Open now"
+  },
+  "opensPages_one": {
+    "message": "Opens $COUNT$ page",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "opensPages_other": {
+    "message": "Opens $COUNT$ pages",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "fromThePatterns": {
+    "message": "from the URL patterns"
+  },
+  "nothingToOpenHint": {
+    "message": "Nothing to open – enter URLs here. (From the URL patterns, only concrete URLs count – no patterns with *, regular expressions or exclusions.)"
+  },
+  "lineIssue": {
+    "message": "Line $LINE$ “$TEXT$”: $MESSAGE$",
+    "placeholders": {
+      "line": {
+        "content": "$1"
+      },
+      "text": {
+        "content": "$2"
+      },
+      "message": {
+        "content": "$3"
+      }
+    }
+  },
+  "testInvalidUrl": {
+    "message": "That is not a valid URL."
+  },
+  "testHit": {
+    "message": "Goes to $GROUP$ via the pattern $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "testNoMatch": {
+    "message": "No group matches – the tab stays where it is."
+  },
+  "testSkipped": {
+    "message": "Skipped: “$NAME$” because of the exclusion $PATTERN$",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "testPaused": {
+    "message": "Would also match “$NAME$”, but that group is paused.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupRemoved": {
+    "message": "“$NAME$” removed – click “Discard” to undo.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "categoryRemoved": {
+    "message": "Category “$NAME$” removed. Click “Discard” to undo.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "categoryRemovedMoved_one": {
+    "message": "Category “$NAME$” removed – its $COUNT$ group was moved to “$TARGET$”. Click “Discard” to undo.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      },
+      "target": {
+        "content": "$3"
+      }
+    }
+  },
+  "categoryRemovedMoved_other": {
+    "message": "Category “$NAME$” removed – its $COUNT$ groups were moved to “$TARGET$”. Click “Discard” to undo.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      },
+      "target": {
+        "content": "$3"
+      }
+    }
+  },
+  "fixErrorsFirst": {
+    "message": "Please fix the errors marked in red first."
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "changesDiscarded": {
+    "message": "Changes discarded"
+  },
+  "importSummary": {
+    "message": "The file contains $INFILE$, you currently have $CURRENT$.",
+    "placeholders": {
+      "infile": {
+        "content": "$1"
+      },
+      "current": {
+        "content": "$2"
+      }
+    }
+  },
+  "importLoaded": {
+    "message": "Import loaded – please review and save."
+  },
+  "groupsSkipped_one": {
+    "message": "$COUNT$ group skipped (name already exists)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsSkipped_other": {
+    "message": "$COUNT$ groups skipped (name already exists)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsAdded_one": {
+    "message": "$COUNT$ group added",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "groupsAdded_other": {
+    "message": "$COUNT$ groups added",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "importAdded": {
+    "message": "$SUMMARY$ – please review and save.",
+    "placeholders": {
+      "summary": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingAdded": {
+    "message": "Nothing added – $REASON$.",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "fileHasNoGroups": {
+    "message": "the file has no groups"
+  },
+  "resetDone": {
+    "message": "Everything reset – click “Save” to apply it, or “Discard” to undo."
+  },
+  "loadFailed": {
+    "message": "Could not load the settings: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "pausedHint": {
+    "message": "Paused – tabs are only sorted when you click a button."
+  },
+  "currentTab": {
+    "message": "Current tab"
+  },
+  "newGroupName": {
+    "message": "Name of the new group"
+  },
+  "newGroupCategory": {
+    "message": "Category of the new group"
+  },
+  "newGroupColor": {
+    "message": "Color of the new group"
+  },
+  "assign": {
+    "message": "Assign"
+  },
+  "alreadyAssigned": {
+    "message": "Already assigned"
+  },
+  "createAndAssign": {
+    "message": "Create group & assign"
+  },
+  "manageGroups": {
+    "message": "Manage groups"
+  },
+  "unknownPage": {
+    "message": "Unknown page"
+  },
+  "newTab": {
+    "message": "New Tab"
+  },
+  "localFile": {
+    "message": "Local file"
+  },
+  "noTabFound": {
+    "message": "No tab found"
+  },
+  "launchLabel": {
+    "message": "Open “$TITLE$” – $PAGES$",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "launchLabelOpen": {
+    "message": "Open “$TITLE$” – $PAGES$, already open",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "tagOpen": {
+    "message": "open"
+  },
+  "tagOpenHint": {
+    "message": "Already open in this window – missing pages will be added."
+  },
+  "tagPaused": {
+    "message": "paused"
+  },
+  "tagPausedHint": {
+    "message": "Tabs are currently not added to this group automatically."
+  },
+  "openAllOf": {
+    "message": "Open all $COUNT$ groups of “$NAME$”",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "belongsTo": {
+    "message": "Belongs to $GROUP$ via $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "pattern": {
+        "content": "$2"
+      }
+    }
+  },
+  "belongsToIn": {
+    "message": "Belongs to $GROUP$ in $CATEGORY$ via $PATTERN$",
+    "placeholders": {
+      "group": {
+        "content": "$1"
+      },
+      "category": {
+        "content": "$2"
+      },
+      "pattern": {
+        "content": "$3"
+      }
+    }
+  },
+  "moveItThere": {
+    "message": "Not in the group right now – move it there"
+  },
+  "noGroupMatches": {
+    "message": "No group matches this URL."
+  },
+  "notAssignable": {
+    "message": "This page can’t be assigned by domain."
+  },
+  "pinnedNeverGrouped": {
+    "message": "Pinned tabs are never grouped."
+  },
+  "assignDomain": {
+    "message": "Assign domain $DOMAIN$ to",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
+  },
+  "chooseGroup": {
+    "message": "Choose a group …"
+  },
+  "groupPaused": {
+    "message": "$NAME$ (paused)",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "newGroupOption": {
+    "message": "New group …"
+  },
+  "nameExists": {
+    "message": "“$NAME$” already exists – pick that group from the list.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "nameExistsIn": {
+    "message": "“$NAME$” already exists in “$CATEGORY$” – pick that group from the list.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      },
+      "category": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedOk": {
+    "message": "$DOMAIN$ now belongs to “$NAME$”.",
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedShadowed": {
+    "message": "Saved, but “$WINNER$” further up still wins – move “$NAME$” above it in the settings.",
+    "placeholders": {
+      "winner": {
+        "content": "$1"
+      },
+      "name": {
+        "content": "$2"
+      }
+    }
+  },
+  "assignedExcluded": {
+    "message": "Saved, but an exclusion pattern in “$NAME$” prevents the assignment.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sortTabFailed": {
+    "message": "Sorting failed."
+  }
+}

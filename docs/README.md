@@ -34,6 +34,10 @@ For installation, see the [main README](../README.md#installation).
 
 Want to see everything in action without typing? **Import** [`tests/sample-groups.json`](../tests/sample-groups.json) in the settings – see [Sample file](backup-and-sync.md#sample-file).
 
+## Language
+
+The extension speaks **English** and **German** – it follows the language of Chrome's user interface; with any other language, it's English. These pages use the English names: in German, *Default* is *Standard*, **Open group** is **Gruppe öffnen** and so on. To switch, change Chrome's display language (on Windows and Linux: Chrome settings → Languages → *Display Google Chrome in this language*; on macOS it follows the system language) and restart Chrome.
+
 ## Terms used in these pages
 
 - **Group** – a group you configure in the settings: name, category, color, URL patterns, pages to open.

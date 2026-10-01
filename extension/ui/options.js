@@ -13,8 +13,11 @@ import {
   categoryName,
   groupTitle,
 } from '../lib/config.js';
+import { t, plural } from '../lib/i18n.js';
 import { compileGroups, explainMatch, urlsToOpen, shortUrl } from '../lib/patterns.js';
-import { h, icon, chip, swatches, note, toast, loadIds, storeIds } from './dom.js';
+import { h, icon, chip, swatches, note, toast, loadIds, storeIds, localize, tParts, mutedParts } from './dom.js';
+
+localize();
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -60,7 +63,6 @@ const isDirty = () => !sameConfig(draft, saved);
 const findGroup = (id) => draft.groups.find((g) => g.id === id);
 const findCategory = (id) => draft.categories.find((c) => c.id === id);
 const titleOf = (group) => groupTitle(group, draft.categories);
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 /** Keeps the groups ordered section by section – the order decides which group wins. */
 function resort() {
@@ -90,17 +92,17 @@ function renderGroups() {
     const groups = draft.groups.filter((g) => g.category === category.id);
     const list = h(
       'ol',
-      { class: 'groups', dataset: { category: category.id }, 'aria-label': category.name || 'Unnamed category' },
+      { class: 'groups', dataset: { category: category.id }, 'aria-label': category.name || t('unnamedCategory') },
       groups.map((group, i) => groupCard(group, { index: draft.groups.indexOf(group), first: i === 0, last: i === groups.length - 1 })),
       h(
         'li',
         { class: 'cat-empty' },
         noGroups
           ? [
-              h('p', { class: 'empty-title' }, 'No groups yet'),
-              h('p', {}, 'Add a group, give it a name and a color, and enter the URLs that belong in it.'),
+              h('p', { class: 'empty-title' }, t('noGroupsTitle')),
+              h('p', {}, t('noGroupsText')),
             ]
-          : 'No groups in this category yet – drag a group here, or choose this category in a group.',
+          : t('categoryEmpty'),
       ),
     );
     return h(
@@ -122,10 +124,10 @@ function toggleButton(expanded, name, dataset) {
     {
       type: 'button',
       class: 'icon-btn fold',
-      title: expanded ? 'Collapse' : 'Expand',
-      'aria-label': `${expanded ? 'Collapse' : 'Expand'} “${name}”`,
+      title: t(expanded ? 'collapse' : 'expand'),
+      'aria-label': t(expanded ? 'collapseNamed' : 'expandNamed', name),
       'aria-expanded': String(expanded),
-      dataset,
+      dataset: { ...dataset, name },
     },
     icon('chevron'),
   );
@@ -141,14 +143,14 @@ function moreMenu(name, ...items) {
       {
         type: 'button',
         class: 'icon-btn menu-btn',
-        title: 'More actions',
-        'aria-label': `More actions for “${name}”`,
+        title: t('moreActions'),
+        'aria-label': t('moreActionsFor', name),
         'aria-haspopup': 'menu',
         'aria-expanded': 'false',
       },
       icon('more'),
     ),
-    h('div', { class: 'menu', role: 'menu', 'aria-label': 'More actions', tabindex: '-1', hidden: true }, items),
+    h('div', { class: 'menu', role: 'menu', 'aria-label': t('moreActions'), tabindex: '-1', hidden: true }, items),
   );
 }
 
@@ -186,16 +188,16 @@ function categoryHead(category, index) {
   return h(
     'div',
     { class: 'cat-head' },
-    toggleButton(!collapsed.has(id), category.name || 'Unnamed category', { catAction: 'toggle' }),
-    h('span', { class: 'cat-icon', title: 'Category', 'aria-hidden': 'true' }, icon('folder')),
+    toggleButton(!collapsed.has(id), category.name || t('unnamedCategory'), { catAction: 'toggle' }),
+    h('span', { class: 'cat-icon', title: t('category'), 'aria-hidden': 'true' }, icon('folder')),
     h('input', {
       class: 'input cat-name',
       type: 'text',
       value: category.name,
       maxlength: '40',
       autocomplete: 'off',
-      placeholder: 'Name of the category',
-      'aria-label': 'Name of the category',
+      placeholder: t('categoryName'),
+      'aria-label': t('categoryName'),
     }),
     h('span', { class: 'cat-count' }),
     h(
@@ -203,29 +205,29 @@ function categoryHead(category, index) {
       { class: 'cat-tools' },
       h(
         'label',
-        { class: 'switch compact', title: 'Turn all groups of this category on or off' },
+        { class: 'switch compact', title: t('categorySwitch') },
         h('input', { type: 'checkbox', class: 'cat-enabled' }),
         h('span', { class: 'track', 'aria-hidden': 'true' }),
         h('span', { class: 'switch-label' }),
       ),
-      h('button', { type: 'button', class: 'btn small', dataset: { catAction: 'open' } }, icon('launch'), 'Open all'),
+      h('button', { type: 'button', class: 'btn small', dataset: { catAction: 'open' } }, icon('launch'), t('openAll')),
       h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
-      button('foldAll', 'Collapse all groups of this category', 'fold-cards'),
+      button('foldAll', t('collapseCategoryGroups'), 'fold-cards'),
       // The rarer actions wait behind ⋮
       moreMenu(
-        category.name || 'Unnamed category',
-        menuItem('plus', 'Add group', { catAction: 'add' }),
-        menuItem('up', 'Move category up', { catAction: 'up' }, { disabled: index === 0 }),
-        menuItem('down', 'Move category down', { catAction: 'down' }, { disabled: index === draft.categories.length - 1 }),
+        category.name || t('unnamedCategory'),
+        menuItem('plus', t('addGroup'), { catAction: 'add' }),
+        menuItem('up', t('moveCategoryUp'), { catAction: 'up' }, { disabled: index === 0 }),
+        menuItem('down', t('moveCategoryDown'), { catAction: 'down' }, { disabled: index === draft.categories.length - 1 }),
         menuSep(),
-        menuItem('launch', 'Open all collapsed', { catAction: 'open-collapsed' }, {
+        menuItem('launch', t('openAllCollapsed'), { catAction: 'open-collapsed' }, {
           checked: category.openCollapsed === true,
-          title: '“Open all” creates the tab groups collapsed – only their names show in the tab strip',
+          title: t('openAllCollapsedHint'),
         }),
         menuSep(),
-        menuItem('trash', 'Delete category', { catAction: 'delete' }, {
+        menuItem('trash', t('deleteCategory'), { catAction: 'delete' }, {
           disabled: only,
-          title: only ? 'The last category can’t be deleted' : null,
+          title: only ? t('lastCategory') : null,
           extraClass: 'danger',
         }),
       ),
@@ -243,12 +245,12 @@ function updateCategoryHead(section) {
   toggle.checked = groups.length > 0 && active === groups.length;
   toggle.indeterminate = active > 0 && active < groups.length;
   toggle.closest('.switch').hidden = !groups.length; // nothing to turn on or off
-  head.querySelector('.switch-label').textContent = !active ? 'Paused' : active === groups.length ? 'Active' : 'Mixed';
-  head.querySelector('.cat-count').textContent = plural(groups.length, 'group', 'groups');
+  head.querySelector('.switch-label').textContent = t(!active ? 'paused' : active === groups.length ? 'active' : 'mixed');
+  head.querySelector('.cat-count').textContent = plural(groups.length, 'group');
   head.querySelector('[data-cat-action="open"]').disabled = !groups.some((g) => g.name.trim() && urlsToOpen(g).urls.length);
   // One button collapses all cards of the category – or, if all are collapsed, expands them
   const anyOpen = groups.some((g) => !collapsedCards.has(g.id));
-  const label = `${anyOpen ? 'Collapse' : 'Expand'} all groups of this category`;
+  const label = t(anyOpen ? 'collapseCategoryGroups' : 'expandCategoryGroups');
   const foldCards = head.querySelector('[data-cat-action="fold-cards"]');
   foldCards.replaceChildren(icon(anyOpen ? 'foldAll' : 'unfoldAll'));
   foldCards.title = label;
@@ -269,20 +271,20 @@ function preview(group) {
 function categoryField(group) {
   const id = group.id;
   return [
-    h('label', { class: 'field-label', for: `category-${id}` }, 'Category'),
+    h('label', { class: 'field-label', for: `category-${id}` }, t('category')),
     h(
       'div',
       { class: 'field category-field' },
       h(
         'select',
         { class: 'select category', id: `category-${id}` },
-        draft.categories.map((c) => h('option', { value: c.id, selected: c.id === group.category }, c.name || 'Unnamed category')),
+        draft.categories.map((c) => h('option', { value: c.id, selected: c.id === group.category }, c.name || t('unnamedCategory'))),
       ),
       h(
         'label',
         { class: 'check' },
         h('input', { type: 'checkbox', class: 'show-category', checked: group.showCategory }),
-        'Show the category in the tab title',
+        t('showCategory'),
       ),
     ),
   ];
@@ -297,9 +299,9 @@ function groupCard(group, { index, first, last }) {
     h(
       'div',
       { class: 'card-head', draggable: 'true' },
-      toggleButton(!folded, group.name || 'Unnamed', { action: 'fold' }),
-      h('span', { class: 'drag-handle', title: 'Drag to change the order' }, icon('grip')),
-      h('span', { class: 'order', title: `Priority ${index + 1}` }, String(index + 1)),
+      toggleButton(!folded, group.name || t('unnamed'), { action: 'fold' }),
+      h('span', { class: 'drag-handle', title: t('dragToReorder') }, icon('grip')),
+      h('span', { class: 'order', title: t('priority', index + 1) }, String(index + 1)),
       preview(group),
       h(
         'div',
@@ -309,27 +311,27 @@ function groupCard(group, { index, first, last }) {
           { class: 'switch compact' },
           h('input', { type: 'checkbox', class: 'enabled', checked: group.enabled }),
           h('span', { class: 'track', 'aria-hidden': 'true' }),
-          h('span', { class: 'switch-label' }, group.enabled ? 'Active' : 'Paused'),
+          h('span', { class: 'switch-label' }, t(group.enabled ? 'active' : 'paused')),
         ),
         h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
         moreMenu(
-          group.name || 'Unnamed',
-          menuItem('up', 'Move up', { action: 'up' }, { disabled: first }),
-          menuItem('down', 'Move down', { action: 'down' }, { disabled: last }),
+          group.name || t('unnamed'),
+          menuItem('up', t('moveUp'), { action: 'up' }, { disabled: first }),
+          menuItem('down', t('moveDown'), { action: 'down' }, { disabled: last }),
           menuSep(),
-          menuItem('launch', 'Open collapsed', { action: 'open-collapsed' }, {
+          menuItem('launch', t('openCollapsed'), { action: 'open-collapsed' }, {
             checked: group.openCollapsed === true,
-            title: '“Open now” and the popup create this tab group collapsed – “Open all” follows the category’s own switch',
+            title: t('openCollapsedHint'),
           }),
           menuSep(),
-          menuItem('trash', 'Delete group', { action: 'delete' }, { extraClass: 'danger' }),
+          menuItem('trash', t('deleteGroup'), { action: 'delete' }, { extraClass: 'danger' }),
         ),
       ),
     ),
     h(
       'div',
       { class: 'card-body' },
-      h('label', { class: 'field-label', for: `name-${id}` }, 'Name'),
+      h('label', { class: 'field-label', for: `name-${id}` }, t('name')),
       h(
         'div',
         { class: 'field' },
@@ -340,18 +342,18 @@ function groupCard(group, { index, first, last }) {
           value: group.name,
           maxlength: '60',
           autocomplete: 'off',
-          placeholder: 'e.g. Development',
+          placeholder: t('namePlaceholder'),
         }),
         h('div', { class: 'issues name-issues' }),
       ),
       categoryField(group),
-      h('span', { class: 'field-label', id: `color-label-${id}` }, 'Color'),
-      h('div', { class: 'field' }, swatches(`color-${id}`, group.color, { label: 'Color' })),
+      h('span', { class: 'field-label', id: `color-label-${id}` }, t('color')),
+      h('div', { class: 'field' }, swatches(`color-${id}`, group.color)),
       h(
         'label',
         { class: 'field-label top', for: `patterns-${id}` },
-        'URL patterns',
-        h('span', { class: 'field-hint' }, 'one per line'),
+        t('urlPatterns'),
+        h('span', { class: 'field-hint' }, t('onePerLine')),
       ),
       h(
         'div',
@@ -370,8 +372,8 @@ function groupCard(group, { index, first, last }) {
       h(
         'label',
         { class: 'field-label top', for: `open-${id}` },
-        'Pages to open',
-        h('span', { class: 'field-hint' }, 'optional'),
+        t('pagesToOpen'),
+        h('span', { class: 'field-hint' }, t('optional')),
       ),
       h(
         'div',
@@ -382,14 +384,14 @@ function groupCard(group, { index, first, last }) {
           rows: 2,
           spellcheck: 'false',
           autocomplete: 'off',
-          placeholder: 'Empty = the URLs from the URL patterns\ne.g. https://github.com/my-company/webshop/pulls',
+          placeholder: t('openUrlsPlaceholder'),
           value: (group.openUrls ?? []).join('\n'),
         }),
         h(
           'div',
           { class: 'open-row' },
           h('p', { class: 'open-preview' }),
-          h('button', { type: 'button', class: 'btn small', dataset: { action: 'open' } }, icon('launch'), 'Open now'),
+          h('button', { type: 'button', class: 'btn small', dataset: { action: 'open' } }, icon('launch'), t('openNow')),
         ),
         h('div', { class: 'issues open-issues' }),
       ),
@@ -403,15 +405,12 @@ function renderOpenPreview(card, group) {
   const preview = card.querySelector('.open-preview');
   if (urls.length) {
     preview.replaceChildren(
-      h('strong', {}, `Opens ${plural(urls.length, 'page', 'pages')}`),
-      source === 'patterns' ? ' from the URL patterns: ' : ': ',
+      h('strong', {}, plural(urls.length, 'opensPages')),
+      source === 'patterns' ? ` ${t('fromThePatterns')}: ` : ': ',
       urls.map(shortUrl).join(' · '),
     );
   } else {
-    preview.replaceChildren(
-      'Nothing to open – enter URLs here. (From the URL patterns, only concrete URLs count – ' +
-        'no patterns with *, regular expressions or exclusions.)',
-    );
+    preview.replaceChildren(t('nothingToOpenHint'));
   }
   card.querySelector('[data-action="open"]').disabled = !urls.length;
 }
@@ -442,11 +441,11 @@ function refresh() {
       ...(item.titleWarning ? [note('warn', item.titleWarning)] : []),
     );
     card.querySelector('.pattern-issues').replaceChildren(
-      ...item.patternErrors.map((e) => note('error', `Line ${e.index + 1} “${e.line}”: ${e.message}`)),
+      ...item.patternErrors.map((e) => note('error', t('lineIssue', e.index + 1, e.line, e.message))),
       ...item.warnings.map((w) => note('warn', w)),
     );
     card.querySelector('.open-issues').replaceChildren(
-      ...item.openErrors.map((e) => note('error', `Line ${e.index + 1} “${e.line}”: ${e.message}`)),
+      ...item.openErrors.map((e) => note('error', t('lineIssue', e.index + 1, e.line, e.message))),
     );
     renderOpenPreview(card, findGroup(card.dataset.id));
   }
@@ -460,9 +459,7 @@ function updateSavebar() {
   els.savebar.classList.toggle('is-visible', dirty);
   els.savebar.setAttribute('aria-hidden', String(!dirty));
   els.savebar.inert = !dirty;
-  els.savebarText.textContent = validation.ok
-    ? 'Unsaved changes'
-    : 'Unsaved changes – please fix the marked errors first';
+  els.savebarText.textContent = t(validation.ok ? 'unsavedChanges' : 'unsavedWithErrors');
   els.savebar.classList.toggle('has-errors', !validation.ok);
   document.body.classList.toggle('has-savebar', dirty);
 }
@@ -479,30 +476,33 @@ function renderTest() {
   const result = explainMatch(compileGroups(draft.groups), value);
   const lines = [];
   if (!result.valid) {
-    lines.push(note('error', 'That is not a valid URL.'));
+    lines.push(note('error', t('testInvalidUrl')));
   } else if (result.match) {
     const { group, pattern } = result.match;
     lines.push(
       h(
         'div',
         { class: 'test-hit' },
-        h('span', { class: 'muted' }, 'Goes to'),
-        chip(titleOf(group), group.color),
-        group.category && !group.showCategory
-          ? h('span', { class: 'muted' }, `(${categoryName(draft.categories, group.category) || 'Unnamed category'})`)
-          : null,
-        h('span', { class: 'muted' }, 'via the pattern'),
-        h('code', {}, pattern),
+        mutedParts(
+          'testHit',
+          [
+            chip(titleOf(group), group.color),
+            group.category && !group.showCategory
+              ? h('span', { class: 'muted' }, `(${categoryName(draft.categories, group.category) || t('unnamedCategory')})`)
+              : null,
+          ],
+          h('code', {}, pattern),
+        ),
       ),
     );
   } else {
-    lines.push(note('info', 'No group matches – the tab stays where it is.'));
+    lines.push(note('info', t('testNoMatch')));
   }
   for (const { group, pattern } of result.excluded) {
-    lines.push(h('p', { class: 'test-aside' }, `Skipped: “${group.name || 'Unnamed'}” because of the exclusion `, h('code', {}, pattern)));
+    lines.push(h('p', { class: 'test-aside' }, tParts('testSkipped', group.name || t('unnamed'), h('code', {}, pattern))));
   }
   for (const { group } of result.disabled) {
-    lines.push(h('p', { class: 'test-aside' }, `Would also match “${group.name || 'Unnamed'}”, but that group is paused.`));
+    lines.push(h('p', { class: 'test-aside' }, t('testPaused', group.name || t('unnamed'))));
   }
   els.testResult.replaceChildren(...lines);
 }
@@ -519,7 +519,7 @@ els.groups.addEventListener('input', (event) => {
     const id = event.target.closest('.cat-section').dataset.category;
     findCategory(id).name = event.target.value;
     for (const option of els.groups.querySelectorAll(`select.category option[value="${id}"]`)) {
-      option.textContent = event.target.value.trim() || 'Unnamed category';
+      option.textContent = event.target.value.trim() || t('unnamedCategory');
     }
     refresh();
     return;
@@ -551,8 +551,8 @@ function setFolded(element, folded) {
   const button = element.querySelector(':scope > .cat-head > .fold, :scope > .card-head > .fold');
   if (button) {
     button.setAttribute('aria-expanded', String(!folded));
-    button.title = folded ? 'Expand' : 'Collapse';
-    button.setAttribute('aria-label', button.getAttribute('aria-label').replace(/^\S+/, folded ? 'Expand' : 'Collapse'));
+    button.title = t(folded ? 'expand' : 'collapse');
+    button.setAttribute('aria-label', t(folded ? 'expandNamed' : 'collapseNamed', button.dataset.name));
   }
   // Textareas that were hidden have no height yet
   if (!folded) element.querySelectorAll('textarea').forEach((t) => t.offsetParent && autoGrow(t));
@@ -587,9 +587,9 @@ function expandCard(id) {
 /** The button above the list: collapses all categories – or, if all are collapsed, expands them. */
 function updateCollapseAll() {
   const anyOpen = draft.categories.some((c) => !collapsed.has(c.id));
-  els.collapseAll.replaceChildren(icon('chevron'), anyOpen ? 'Collapse all' : 'Expand all');
+  els.collapseAll.replaceChildren(icon('chevron'), t(anyOpen ? 'collapseAll' : 'expandAll'));
   els.collapseAll.classList.toggle('is-folded', !anyOpen);
-  els.collapseAll.setAttribute('aria-label', `${anyOpen ? 'Collapse' : 'Expand'} all categories`);
+  els.collapseAll.setAttribute('aria-label', t(anyOpen ? 'collapseAllCategories' : 'expandAllCategories'));
 }
 
 els.collapseAll.addEventListener('click', () => {
@@ -622,7 +622,7 @@ els.groups.addEventListener('change', (event) => {
   } else if (event.target.matches('.enabled')) {
     group.enabled = event.target.checked;
     card.classList.toggle('is-disabled', !group.enabled);
-    card.querySelector('.switch-label').textContent = group.enabled ? 'Active' : 'Paused';
+    card.querySelector('.switch-label').textContent = t(group.enabled ? 'active' : 'paused');
   } else if (event.target.matches('.show-category')) {
     group.showCategory = event.target.checked;
   } else if (event.target.matches('select.category')) {
@@ -764,7 +764,7 @@ els.groups.addEventListener('click', (event) => {
     const cards = els.groups.querySelectorAll('.group-card');
     const next = cards[Math.min(index, cards.length - 1)];
     (next?.querySelector('.name') ?? els.addGroup).focus();
-    toast(`“${removed.name || 'Unnamed'}” removed – click “Discard” to undo.`);
+    toast(t('groupRemoved', removed.name || t('unnamed')));
   }
 });
 
@@ -844,12 +844,11 @@ function categoryAction(button) {
     // A collapsed target stays collapsed – it's only highlighted briefly
     sectionOf(target.id).querySelector('.fold').focus();
     if (moved.length) flash(sectionOf(target.id));
+    const removedName = removed.name || t('unnamed');
     toast(
-      `Category “${removed.name || 'Unnamed'}” removed` +
-        (moved.length
-          ? ` – its ${plural(moved.length, 'group was', 'groups were')} moved to “${target.name || 'Unnamed category'}”`
-          : '') +
-        '. Click “Discard” to undo.',
+      moved.length
+        ? plural(moved.length, 'categoryRemovedMoved', removedName, target.name || t('unnamedCategory'))
+        : t('categoryRemoved', removedName),
     );
   }
 }
@@ -933,10 +932,10 @@ function addGroup(categoryId) {
   card.querySelector('.name').focus({ preventScroll: true });
 }
 
-els.addGroup.append(icon('plus'), 'Add group');
+els.addGroup.append(icon('plus'), t('addGroup'));
 els.addGroup.addEventListener('click', () => addGroup(draft.categories.at(-1).id)); // at the bottom, next to the button
 
-els.addCategory.append(icon('folder'), 'Add category');
+els.addCategory.append(icon('folder'), t('addCategory'));
 els.addCategory.addEventListener('click', () => {
   const category = { id: newId(), name: '', openCollapsed: false };
   draft.categories.push(category);
@@ -967,7 +966,7 @@ els.testUrl.addEventListener('input', renderTest);
 async function save() {
   refresh();
   if (!validation.ok) {
-    toast('Please fix the errors marked in red first.', 'error');
+    toast(t('fixErrorsFirst'), 'error');
     const invalid = els.groups.querySelector('[aria-invalid="true"]');
     if (invalid) {
       expandCategory(invalid.closest('.cat-section').dataset.category);
@@ -981,7 +980,7 @@ async function save() {
   els.save.disabled = true;
   try {
     saved = await saveConfig(draft);
-    toast('Saved');
+    toast(t('saved'));
     return true;
   } catch (err) {
     toast(err.message, 'error');
@@ -997,7 +996,7 @@ function discard() {
   draft = clone(saved);
   els.external.hidden = true;
   renderAll();
-  toast('Changes discarded');
+  toast(t('changesDiscarded'));
 }
 
 els.save.addEventListener('click', save);
@@ -1022,12 +1021,12 @@ async function openGroupNow(groupId, button) {
   try {
     const win = await chrome.windows.getCurrent();
     const result = await chrome.runtime.sendMessage({ type: 'openGroup', groupId, windowId: win.id });
-    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
-    const parts = [result.opened ? `${plural(result.opened, 'page', 'pages')} opened` : 'all pages were already open'];
-    if (result.failed?.length) parts.push(`could not open: ${result.failed.map(shortUrl).join(', ')}`);
-    toast(`“${result.name}”: ${parts.join(' – ')}`, result.failed?.length ? 'error' : 'ok');
+    if (!result?.ok) throw new Error(result?.error ?? t('unknownError'));
+    const parts = [result.opened ? plural(result.opened, 'pagesOpened') : t('allAlreadyOpen')];
+    if (result.failed?.length) parts.push(t('couldNotOpen', result.failed.map(shortUrl).join(', ')));
+    toast(t('openResult', result.name, parts.join(' – ')), result.failed?.length ? 'error' : 'ok');
   } catch (err) {
-    toast(`Opening failed: ${err.message}`, 'error');
+    toast(t('openingFailed', err.message), 'error');
   } finally {
     button.disabled = false;
     refresh();
@@ -1040,15 +1039,15 @@ async function openCategoryNow(categoryId, button) {
   try {
     const win = await chrome.windows.getCurrent();
     const result = await chrome.runtime.sendMessage({ type: 'openCategory', categoryId, windowId: win.id });
-    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
+    if (!result?.ok) throw new Error(result?.error ?? t('unknownError'));
     const parts = [
-      plural(result.groups, 'group', 'groups'),
-      result.opened ? `${plural(result.opened, 'page', 'pages')} opened` : 'all pages were already open',
+      plural(result.groups, 'group'),
+      result.opened ? plural(result.opened, 'pagesOpened') : t('allAlreadyOpen'),
     ];
-    if (result.failed?.length) parts.push(`could not open: ${result.failed.map(shortUrl).join(', ')}`);
-    toast(`“${result.name}”: ${parts.join(' – ')}`, result.failed?.length ? 'error' : 'ok');
+    if (result.failed?.length) parts.push(t('couldNotOpen', result.failed.map(shortUrl).join(', ')));
+    toast(t('openResult', result.name, parts.join(' – ')), result.failed?.length ? 'error' : 'ok');
   } catch (err) {
-    toast(`Opening failed: ${err.message}`, 'error');
+    toast(t('openingFailed', err.message), 'error');
   } finally {
     button.disabled = false;
     refresh();
@@ -1057,19 +1056,19 @@ async function openCategoryNow(categoryId, button) {
 
 /* ---------- Sort all tabs ---------- */
 
-els.sortAll.append(icon('sort'), 'Sort all tabs now');
+els.sortAll.append(icon('sort'), t('sortAllNow'));
 els.sortAll.addEventListener('click', async () => {
   if (isDirty() && !(await save())) return;
   els.sortAll.disabled = true;
   try {
     const result = await chrome.runtime.sendMessage({ type: 'sortAll' });
-    if (!result?.ok) throw new Error(result?.error ?? 'Unknown error');
+    if (!result?.ok) throw new Error(result?.error ?? t('unknownError'));
     const parts = [];
-    if (result.moved) parts.push(`${plural(result.moved, 'tab', 'tabs')} sorted into groups`);
-    if (result.ungrouped) parts.push(`${plural(result.ungrouped, 'tab', 'tabs')} removed from groups`);
-    toast(parts.length ? parts.join(', ') : 'Everything is already sorted.');
+    if (result.moved) parts.push(plural(result.moved, 'tabsSorted'));
+    if (result.ungrouped) parts.push(plural(result.ungrouped, 'tabsUngrouped'));
+    toast(parts.length ? parts.join(', ') : t('alreadySorted'));
   } catch (err) {
-    toast(`Sorting failed: ${err.message}`, 'error');
+    toast(t('sortingFailed', err.message), 'error');
   } finally {
     els.sortAll.disabled = false;
   }
@@ -1077,7 +1076,7 @@ els.sortAll.addEventListener('click', async () => {
 
 /* ---------- Export / Import ---------- */
 
-els.exportBtn.append(icon('download'), 'Export');
+els.exportBtn.append(icon('download'), t('export'));
 els.exportBtn.addEventListener('click', () => {
   const data = JSON.stringify(toExport(normalized(draft)), null, 2);
   const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
@@ -1089,13 +1088,11 @@ els.exportBtn.addEventListener('click', () => {
 
 /** Asks whether the import adds to or replaces the current groups: 'add' | 'replace' | '' (cancelled). */
 function askImportMode(imported) {
-  els.importSummary.textContent =
-    `The file contains ${plural(imported.groups.length, 'group', 'groups')}, ` +
-    `you currently have ${plural(draft.groups.length, 'group', 'groups')}.`;
+  els.importSummary.textContent = t('importSummary', plural(imported.groups.length, 'group'), plural(draft.groups.length, 'group'));
   return ask(els.importDialog);
 }
 
-els.importBtn.append(icon('upload'), 'Import …');
+els.importBtn.append(icon('upload'), t('importButton'));
 els.importBtn.addEventListener('click', () => els.importFile.click());
 els.importFile.addEventListener('change', async () => {
   const file = els.importFile.files?.[0];
@@ -1107,20 +1104,18 @@ els.importFile.addEventListener('change', async () => {
     if (mode === 'replace') {
       draft = imported;
       renderAll();
-      toast('Import loaded – please review and save.');
+      toast(t('importLoaded'));
     } else if (mode === 'add') {
       const { config, added, skipped } = mergeImport(draft, imported);
-      const skippedText = skipped.length
-        ? `${plural(skipped.length, 'group', 'groups')} skipped (name already exists)`
-        : '';
+      const skippedText = skipped.length ? plural(skipped.length, 'groupsSkipped') : '';
       if (!added.length) {
-        toast(`Nothing added – ${skippedText || 'the file has no groups'}.`, 'error');
+        toast(t('nothingAdded', skippedText || t('fileHasNoGroups')), 'error');
         return;
       }
       draft = config;
       renderAll();
-      const parts = [`${plural(added.length, 'group', 'groups')} added`, skippedText].filter(Boolean);
-      toast(`${parts.join(', ')} – please review and save.`);
+      const parts = [plural(added.length, 'groupsAdded'), skippedText].filter(Boolean);
+      toast(t('importAdded', parts.join(', ')));
     }
   } catch (err) {
     toast(err.message, 'error');
@@ -1138,7 +1133,7 @@ function ask(dialog) {
   });
 }
 
-els.resetBtn.append(icon('trash'), 'Reset …');
+els.resetBtn.append(icon('trash'), t('resetButton'));
 els.resetBtn.addEventListener('click', async () => {
   if ((await ask(els.resetDialog)) !== 'reset') return;
   // As right after installing: only “Default”, no groups, default options – takes effect with “Save”
@@ -1148,7 +1143,7 @@ els.resetBtn.addEventListener('click', async () => {
   storeCollapsed();
   storeCollapsedCards();
   renderAll();
-  toast('Everything reset – click “Save” to apply it, or “Discard” to undo.');
+  toast(t('resetDone'));
 });
 
 /* ---------- Changes from elsewhere (popup, other device) ---------- */
@@ -1186,4 +1181,4 @@ async function init() {
   renderAll();
 }
 
-init().catch((err) => toast(`Could not load the settings: ${err.message}`, 'error'));
+init().catch((err) => toast(t('loadFailed', err.message), 'error'));

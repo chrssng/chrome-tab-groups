@@ -6,7 +6,8 @@
  *   npm run test:e2e
  *
  * All domains are redirected to a local test server via --host-resolver-rules –
- * nothing goes out to the internet.
+ * nothing goes out to the internet. The browser runs in English (the checks
+ * compare texts), a second one at the end in German.
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -62,21 +63,32 @@ async function waitFor(fn, timeout = 5000) {
 }
 
 // ---------- Browser ----------
-const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'tab-groups-e2e-'));
-const context = await chromium.launchPersistentContext(profile, {
-  channel: 'chromium',
-  headless: true,
-  viewport: { width: 1100, height: 900 },
-  args: [
-    `--disable-extensions-except=${EXT}`,
-    `--load-extension=${EXT}`,
-    '--host-resolver-rules=MAP * 127.0.0.1',
-    '--no-proxy-server',
-    '--disable-features=HttpsUpgrades',
-  ],
-});
-let [sw] = context.serviceWorkers();
-if (!sw) sw = await context.waitForEvent('serviceworker');
+/**
+ * Chromium with the extension in a fresh profile. `lang` (e.g. 'de_DE') is the
+ * language of its texts: --lang on Windows and macOS, LANGUAGE on Linux.
+ */
+async function launch(lang) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tab-groups-e2e-'));
+  const browser = await chromium.launchPersistentContext(dir, {
+    channel: 'chromium',
+    headless: true,
+    viewport: { width: 1100, height: 900 },
+    env: { ...process.env, LANGUAGE: lang, LANG: `${lang}.UTF-8`, LC_ALL: `${lang}.UTF-8` },
+    args: [
+      `--lang=${lang.replace('_', '-')}`,
+      `--disable-extensions-except=${EXT}`,
+      `--load-extension=${EXT}`,
+      '--host-resolver-rules=MAP * 127.0.0.1',
+      '--no-proxy-server',
+      '--disable-features=HttpsUpgrades',
+    ],
+  });
+  let [worker] = browser.serviceWorkers();
+  if (!worker) worker = await browser.waitForEvent('serviceworker');
+  return { dir, browser, worker };
+}
+
+const { dir: profile, browser: context, worker: sw } = await launch('en_US');
 const extId = sw.url().split('/')[2];
 await sleep(500);
 
@@ -347,6 +359,11 @@ await card.locator('.patterns').fill('docs.example.test\n\n# comment');
 await optionsPage.fill('#test-url', 'mail.google.test/x');
 const testText = await optionsPage.locator('#test-result').textContent();
 check('URL test shows the match and the skipped exclusion', testText.includes('Mail') && testText.includes('!mail.google.test'), testText);
+check(
+  'URL test: chip and pattern sit inside the sentence',
+  /^Goes to\s*Mail\s*\(Default\)\s*via the pattern\s*mail\.google\.test/.test(testText),
+  testText,
+);
 
 await optionsPage.keyboard.press('Control+s');
 stored = await waitFor(async () => {
@@ -400,6 +417,7 @@ await popup.goto(`chrome-extension://${extId}/popup.html?tab=${t18}`);
 await popup.waitForSelector('#assign:not([hidden])');
 const suggested = await popup.locator('#assign-label code').textContent();
 check('Popup suggests the domain', suggested === `newsite.test${PORT_SUFFIX}`, suggested);
+check('Popup: the domain sits inside the sentence', (await popup.locator('#assign-label').textContent()) === `Assign domain ${suggested} to`);
 await popup.selectOption('#target', '__new__');
 check('Popup suggests a group name', (await popup.locator('#new-name').inputValue()) === 'Newsite');
 await popup.fill('#new-name', 'News');
@@ -829,9 +847,53 @@ check('Reset: “Discard” brings everything back', (await optionsPage.locator(
 // ---------- Service worker warnings ----------
 const logs = (await sw.evaluate(() => self.__logs)) ?? ['(log hook lost – service worker restarted?)'];
 check('No errors/warnings in the service worker', logs.length === 0, logs.join('\n'));
+await context.close();
+fs.rmSync(profile, { recursive: true, force: true });
+
+// ---------- In German (a second browser with a fresh profile) ----------
+const de = await launch('de_DE');
+const deOptions = await waitFor(() => de.browser.pages().find((p) => p.url().includes('options.html')));
+await deOptions.waitForSelector('.cat-section');
+const deTexts = await deOptions.evaluate(() => ({
+  lang: document.documentElement.lang,
+  title: document.title,
+  heading: document.querySelector('#h-groups').textContent,
+  rich: document.querySelector('#h-groups + .panel-sub strong')?.textContent,
+  category: document.querySelector('.cat-name').value,
+  count: document.querySelector('.cat-count').textContent,
+  addGroup: document.querySelector('#add-group').textContent,
+}));
+check(
+  'German: the settings page speaks German – texts, rich text, placeholders, the “Default” category',
+  deTexts.lang === 'de' &&
+    deTexts.title === 'Tab Groups by URL – Einstellungen' &&
+    deTexts.heading === 'Gruppen' &&
+    deTexts.rich === 'oberste' &&
+    deTexts.category === 'Standard' &&
+    deTexts.count === '0 Gruppen' &&
+    deTexts.addGroup === 'Gruppe hinzufügen',
+  JSON.stringify(deTexts),
+);
+const deTab = await de.worker.evaluate(async (url) => (await chrome.tabs.create({ url, active: false })).id, U('neu.test/'));
+await sleep(400);
+const dePopup = await de.browser.newPage();
+await dePopup.goto(`chrome-extension://${de.worker.url().split('/')[2]}/popup.html?tab=${deTab}`);
+await dePopup.waitForSelector('#assign:not([hidden])');
+const dePopupTexts = await dePopup.evaluate(() => ({
+  label: document.querySelector('#assign-label').textContent,
+  status: document.querySelector('#status').textContent,
+  manage: document.querySelector('#manage').textContent,
+}));
+check(
+  'German: the popup speaks German – also with the domain inside the sentence',
+  dePopupTexts.label === `Domain neu.test${PORT_SUFFIX} zuweisen an` &&
+    dePopupTexts.status === 'Keine Gruppe passt zu dieser URL.' &&
+    dePopupTexts.manage === 'Gruppen verwalten',
+  JSON.stringify(dePopupTexts),
+);
+await de.browser.close();
+fs.rmSync(de.dir, { recursive: true, force: true });
 
 console.log(`\n${results.filter((r) => r.ok).length}/${results.length} passed`);
-await context.close();
 server.close();
-fs.rmSync(profile, { recursive: true, force: true });
 process.exit(results.every((r) => r.ok) ? 0 : 1);

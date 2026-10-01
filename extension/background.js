@@ -15,6 +15,7 @@
  *    redirects (e.g. to a login page) don't push them into another group.
  */
 import { loadConfig, configFromItems, groupTitle, ownerOf, GROUP_PREFIX, SETTINGS_KEY } from './lib/config.js';
+import { t } from './lib/i18n.js';
 import { compileGroups, findMatch, urlsToOpen, missingUrls } from './lib/patterns.js';
 
 const NO_GROUP = chrome.tabGroups.TAB_GROUP_ID_NONE;
@@ -350,10 +351,10 @@ async function openGroup(groupId, windowId, { focus = true, collapse } = {}) {
   await stateReady;
   const config = await getConfig();
   const def = config.groups.find((g) => g.id === groupId && g.name);
-  if (!def) throw new Error('This group no longer exists.');
+  if (!def) throw new Error(t('groupGone'));
   collapse ??= def.openCollapsed;
   const { urls } = urlsToOpen(def);
-  if (!urls.length) throw new Error(`There is no URL to open for “${def.name}”.`);
+  if (!urls.length) throw new Error(t('nothingToOpenGroup', def.name));
 
   const win = await targetWindow(windowId);
   if (!win) {
@@ -445,10 +446,10 @@ async function openCategory(categoryId, windowId) {
   await stateReady;
   const config = await getConfig();
   const category = config.categories.find((c) => c.id === categoryId);
-  if (!category) throw new Error('This category no longer exists.');
-  const name = category.name || 'Unnamed category';
+  if (!category) throw new Error(t('categoryGone'));
+  const name = category.name || t('unnamedCategory');
   const defs = config.groups.filter((g) => g.name && g.category === categoryId && urlsToOpen(g).urls.length);
-  if (!defs.length) throw new Error(`There is nothing to open in “${name}”.`);
+  if (!defs.length) throw new Error(t('nothingToOpenCategory', name));
 
   const total = { name, groups: defs.length, opened: 0, alreadyOpen: 0, failed: [] };
   for (const [index, def] of defs.entries()) {
@@ -499,11 +500,9 @@ async function syncOpenGroups(changes) {
 
 async function updateBadge() {
   const { settings } = await getConfig();
-  await chrome.action.setBadgeText({ text: settings.enabled ? '' : 'off' });
+  await chrome.action.setBadgeText({ text: settings.enabled ? '' : t('badgeOff') });
   await chrome.action.setBadgeBackgroundColor({ color: '#5F6368' });
-  await chrome.action.setTitle({
-    title: settings.enabled ? 'Tab Groups by URL' : 'Tab Groups by URL (paused)',
-  });
+  await chrome.action.setTitle({ title: t(settings.enabled ? 'extName' : 'actionTitlePaused') });
 }
 
 /* ---------- Events ---------- */
