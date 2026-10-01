@@ -104,7 +104,7 @@ The groups are checked **from top to bottom** – across all [categories](catego
 
 So put specific groups above general ones: *Issues & PRs* (`github.com/*/issues`) has to be above *GitHub* (`github.com`), otherwise *GitHub* catches every GitHub URL first. The order of the categories counts too – a catch-all group like *Google* (`google.com`) belongs in a category further down.
 
-Reorder groups by dragging them by their header or with ↑ ↓, and categories with ↑ ↓ in their header – see [Settings](settings.md#groups) and [Priority](categories.md#priority).
+Reorder groups by dragging them by their header or with **Move up / down** in their ⋮ menu, and categories with **Move category up / down** in the ⋮ menu of their header – see [Settings](settings.md#groups) and [Priority](categories.md#priority).
 
 If a pattern can never win because a group further up already catches it, the settings page warns you:
 

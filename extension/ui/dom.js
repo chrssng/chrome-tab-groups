@@ -43,6 +43,7 @@ const ICONS = {
   search: 'M11 18.5a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM20.5 20.5l-4.2-4.2',
   launch: 'M14 4h6v6M20 4l-8.5 8.5M18 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5.5',
   grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+  more: 'M12 5h.01M12 12h.01M12 19h.01', // ⋮
   chevron: 'M6 9l6 6 6-6',
   foldAll: 'M7 4l5 5 5-5M7 20l5-5 5 5', // chevrons pointing inwards
   unfoldAll: 'M7 9l5-5 5 5M7 15l5 5 5-5', // chevrons pointing outwards
@@ -84,6 +85,23 @@ export function swatches(radioName, selected, { label = 'Color' } = {}) {
       ),
     ),
   );
+}
+
+/* View state such as collapsed sections: a set of IDs in localStorage – only on this device */
+export function loadIds(key) {
+  try {
+    const ids = JSON.parse(localStorage.getItem(key));
+    return new Set(Array.isArray(ids) ? ids : []);
+  } catch {
+    return new Set();
+  }
+}
+export function storeIds(key, ids) {
+  try {
+    localStorage.setItem(key, JSON.stringify([...ids]));
+  } catch {
+    /* only a convenience */
+  }
 }
 
 export function note(kind, text) {

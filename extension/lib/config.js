@@ -3,9 +3,9 @@
  *
  * Stored in chrome.storage.sync (so it follows your Chrome account):
  *   settings        → { enabled, ungroupOnLeave, openInListOrder, order: [ids],
- *                       categories: [{ id, name }] }
+ *                       categories: [{ id, name, openCollapsed }] }
  *   group:<id>      → { name, color, patterns: [...], openUrls: [...], enabled,
- *                       category, showCategory }
+ *                       category, showCategory, openCollapsed }
  * Each group lives in its own entry because Chrome sync only allows
  * 8 KB per entry.
  *
@@ -20,7 +20,7 @@ import { compileGroups, findMatch, sampleUrl, toOpenUrl } from './patterns.js';
 export const SETTINGS_KEY = 'settings';
 export const GROUP_PREFIX = 'group:';
 /** Fixed ID, so every part of the extension means the same “Default” before it is ever saved. */
-export const DEFAULT_CATEGORY = Object.freeze({ id: 'default', name: 'Default' });
+export const DEFAULT_CATEGORY = Object.freeze({ id: 'default', name: 'Default', openCollapsed: false });
 export const DEFAULT_SETTINGS = Object.freeze({ enabled: true, ungroupOnLeave: false, openInListOrder: false });
 
 const storage = () => chrome.storage.sync;
@@ -47,6 +47,7 @@ export function normalizeGroup(input = {}) {
     enabled: input.enabled !== false,
     category: typeof input.category === 'string' ? input.category : '', // "" → assigned by normalizeConfig
     showCategory: input.showCategory === true, // tab strip title "Category · Name"
+    openCollapsed: input.openCollapsed === true, // opened on its own ("Open now", popup): tab group collapsed
   };
 }
 
@@ -59,7 +60,8 @@ function normalizeSettings(input = {}) {
 }
 
 /**
- * [{ id, name }] – never empty: without categories there is “Default”.
+ * [{ id, name, openCollapsed }] – never empty: without categories there is “Default”.
+ * openCollapsed: “Open all” creates the category's tab groups collapsed.
  * An entry with the ID "" (an earlier format for “no category”) becomes
  * “Default” at its position.
  */
@@ -75,7 +77,7 @@ export function normalizeCategories(list) {
     }
     if (!id || seen.has(id)) continue;
     seen.add(id);
-    categories.push({ id, name: String(entry.name ?? '').trim() });
+    categories.push({ id, name: String(entry.name ?? '').trim(), openCollapsed: entry.openCollapsed === true });
   }
   if (legacyAt !== -1 && !seen.has(DEFAULT_CATEGORY.id)) categories.splice(legacyAt, 0, { ...DEFAULT_CATEGORY });
   if (!categories.length) categories.push({ ...DEFAULT_CATEGORY });
@@ -152,6 +154,7 @@ export async function saveConfig(config) {
       enabled: g.enabled,
       category: g.category,
       showCategory: g.showCategory,
+      openCollapsed: g.openCollapsed,
     };
   }
   const stale = Object.keys(existing).filter((key) => key.startsWith(GROUP_PREFIX) && !(key in items));
@@ -215,7 +218,7 @@ export function toExport(config) {
     version: 1,
     exportedAt: new Date().toISOString(),
     settings,
-    categories: categories.map((c) => c.name),
+    categories: categories.map((c) => ({ name: c.name, openCollapsed: c.openCollapsed })),
     groups: groups.map((g) => ({
       name: g.name,
       category: categoryName(categories, g.category),
@@ -224,13 +227,15 @@ export function toExport(config) {
       patterns: g.patterns,
       openUrls: g.openUrls,
       enabled: g.enabled,
+      openCollapsed: g.openCollapsed,
     })),
   };
 }
 
 /**
  * Reads an exported file. Categories are referenced by name there; groups
- * without a category (older files) go to “Default”.
+ * without a category (older files) go to “Default”. The list of categories
+ * holds { name, openCollapsed } – or just the names (older files).
  */
 export function fromImport(text) {
   let data;
@@ -243,28 +248,30 @@ export function fromImport(text) {
   if (!Array.isArray(list)) throw new Error('No groups found in the file.');
 
   const categories = [];
-  const idFor = (name) => {
+  const categoryFor = (name) => {
     const clean = (typeof name === 'string' ? name.trim() : '') || DEFAULT_CATEGORY.name;
     let category = categories.find((c) => nameKey(c.name) === nameKey(clean));
     if (!category) {
       category = { id: newId(), name: clean };
       categories.push(category);
     }
-    return category.id;
+    return category;
   };
   // An empty entry (earlier format for “no category”) is where “Default” goes
   for (const entry of Array.isArray(data?.categories) ? data.categories : []) {
-    idFor(typeof entry === 'string' ? entry : entry?.name);
+    const category = categoryFor(typeof entry === 'string' ? entry : entry?.name);
+    if (entry?.openCollapsed === true) category.openCollapsed = true;
   }
-  const groups = list.map((g) => normalizeGroup({ ...g, id: undefined, category: idFor(g?.category) }));
+  const groups = list.map((g) => normalizeGroup({ ...g, id: undefined, category: categoryFor(g?.category).id }));
   return normalizeConfig({ settings: data?.settings, categories, groups });
 }
 
 /**
  * Import in "add" mode: the imported groups are added to the current ones,
- * the current settings stay. Categories with the same name are merged, new
- * ones go to the end. Groups whose name already exists in their category are
- * skipped – otherwise saving would be blocked by the duplicate name.
+ * the current settings stay. Categories with the same name are merged (and
+ * keep their own options), new ones go to the end. Groups whose name already
+ * exists in their category are skipped – otherwise saving would be blocked by
+ * the duplicate name.
  */
 export function mergeImport(current, imported) {
   const base = normalizeConfig(current);
@@ -277,7 +284,7 @@ export function mergeImport(current, imported) {
       continue;
     }
     const id = categories.some((x) => x.id === c.id) ? newId() : c.id; // never take over an existing ID
-    categories.push({ id, name: c.name });
+    categories.push({ ...c, id });
     mapped.set(c.id, id);
   }
 

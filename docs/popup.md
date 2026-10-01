@@ -14,9 +14,11 @@ While it's off, the popup shows *Paused – tabs are only sorted when you click 
 
 ## Open group
 
-Every group that has a name and at least one page to open is listed here. Click a row to [open the group](open-group.md) in the current window.
+Every group that has a name and at least one page to open is listed here. Click a row to [open the group](open-group.md) in the current window – collapsed, if the group is set to [Open collapsed](open-group.md#collapsed-tab-groups).
 
-If these groups are spread over several [categories](categories.md), each category is shown as its own block – with a folder icon and the category's name, and its groups inside. **Open all** next to the name opens all groups of that category at once – see [Opening a whole category](open-group.md#opening-a-whole-category). It's shown for categories with more than one group.
+If these groups are spread over several [categories](categories.md), each category is shown as its own block – with a folder icon and the category's name, and its groups inside. **Open all** next to the name opens all groups of that category at once – expanded, or collapsed if the category is set to [Open all collapsed](open-group.md#collapsed-tab-groups). See [Opening a whole category](open-group.md#opening-a-whole-category). It's shown for categories with more than one group.
+
+Click a category's name to collapse or expand its block – handy for categories you rarely open. **Collapse all** next to “Open group” collapses all categories at once – or, if all are collapsed, it reads **Expand all**. A collapsed block shows how many groups it contains, and **Open all** keeps working. The popup remembers which categories are collapsed (only on this computer, and separately from the settings page).
 
 Each row shows:
 

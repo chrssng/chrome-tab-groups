@@ -25,6 +25,11 @@ html body {
 /* ---------- Open group ---------- */
 
 .launch { padding: 14px 0 10px; }
+.launch-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* “Collapse all” / “Expand all”: chevron points down while something is open, right when all are collapsed */
+#fold-all { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+#fold-all svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+#fold-all.is-folded svg { transform: rotate(-90deg); }
 .launch-list {
   list-style: none;
   margin: 6px -8px 0;
@@ -59,14 +64,34 @@ html body {
 .launch-cat {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 6px 4px;
+  gap: 8px;
+  padding: 4px 6px 0 0;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--text);
 }
+/* The heading collapses the block: chevron, folder icon, name – and while collapsed, the number of groups */
+.launch-fold {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.launch-fold:hover { background: var(--surface); }
 .launch-cat svg { width: 15px; height: 15px; flex: none; color: var(--text-2); }
-.launch-cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.launch-fold svg:first-child { margin: 0 -3px 0 -2px; transition: transform 0.15s ease; }
+.launch-block.is-collapsed .launch-fold svg:first-child { transform: rotate(-90deg); }
+.launch-cat-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.launch-cat-count { flex: none; font-weight: 500; color: var(--text-2); }
+.launch-block:not(.is-collapsed) .launch-cat-count,
+.launch-block.is-collapsed > .launch-sublist { display: none; }
 .launch-all { font-size: 12.5px; flex: none; }
 .launch-sublist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .launch-block .launch-row { padding: 7px 6px; }

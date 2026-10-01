@@ -8,9 +8,9 @@ Chrome extension: when you open a page whose URL matches a pattern, the tab auto
 
 - **[Automatic grouping](docs/automatic-grouping.md)** – tabs move into their group as soon as their URL matches: per window, without duplicate groups, and without pulling back tabs you dragged out by hand.
 - **[URL patterns](docs/url-patterns.md)** – domains with subdomains, paths, ports, schemes, `*` wildcards, regular expressions and `!` exclusions. The topmost matching group wins.
-- **[Open a group in one click](docs/open-group.md)** – all of its pages as a tab group, without opening anything twice – or a whole category at once.
-- **[Categories](docs/categories.md)** – sort your groups into sections like *Work* or *Reading*: pause or open a whole category, reuse a group name in another category, optionally show the category in the tab title.
-- **[Popup](docs/popup.md)** – pause/resume, open groups, see where the current tab belongs, assign its domain to a group.
+- **[Open a group in one click](docs/open-group.md)** – all of its pages as a tab group, without opening anything twice – or a whole category at once. Expanded or collapsed, as you choose per group and per category.
+- **[Categories](docs/categories.md)** – sort your groups into sections like *Work* or *Reading*: pause or open a whole category (optionally as collapsed tab groups), reuse a group name in another category, optionally show the category in the tab title.
+- **[Popup](docs/popup.md)** – pause/resume, open groups (in collapsible categories), see where the current tab belongs, assign its domain to a group.
 - **[Settings page](docs/settings.md)** – edit, reorder (drag & drop), collapse and pause groups, test any URL live.
 - **[Backup, sync & import](docs/backup-and-sync.md)** – via Chrome sync, plus export/import as JSON – and a reset to start over.
 
@@ -57,7 +57,7 @@ No build step, no runtime dependencies – plain JavaScript (ES modules). After 
 npm test                          # unit tests (Node 20+)
 npm install                       # only needed for the E2E test (Playwright)
 npx playwright install chromium
-npm run test:e2e                  # 81 checks in a real Chromium, no internet needed
+npm run test:e2e                  # 91 checks in a real Chromium, no internet needed
 ```
 
 Debugging: on `chrome://extensions`, click **Service Worker** on the extension's entry – this opens DevTools for `background.js`.

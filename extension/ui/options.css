@@ -59,7 +59,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
-  overflow: hidden;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .group-card:focus-within { border-color: var(--border-strong); box-shadow: var(--shadow-1); }
@@ -72,6 +71,8 @@ body {
   padding: 8px 10px 8px 8px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
+  /* rounded itself – the card doesn't clip, so the ⋮ menu can stick out of it */
+  border-radius: 11px 11px 0 0;
   cursor: grab;
 }
 
@@ -122,7 +123,7 @@ body {
 #collapse-all.is-folded svg { transform: rotate(-90deg); }
 .card-head .fold { margin-right: -8px; }
 .group-card.is-collapsed > .card-body { display: none; }
-.group-card.is-collapsed > .card-head { border-bottom: 0; }
+.group-card.is-collapsed > .card-head { border-bottom: 0; border-radius: 11px; }
 .group-card.has-errors { border-color: var(--danger); }
 
 .cat-head {
@@ -145,6 +146,48 @@ body {
 .cat-tools .btn.small { margin: 0 2px 0 6px; }
 .switch input:indeterminate + .track { background: var(--accent-soft); border-color: var(--accent); }
 .switch input:indeterminate + .track::after { transform: translateX(8px); }
+
+/* Menu behind ⋮ (category head, group card) */
+.menu-wrap { position: relative; display: flex; cursor: default; } /* not the card head's grab hand */
+.menu-btn svg { stroke-width: 3.2; } /* the dots */
+.menu-btn[aria-expanded="true"] { background: var(--surface-2); color: var(--text); }
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 210px;
+  padding: 6px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.menu.opens-up { top: auto; bottom: calc(100% + 4px); }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.menu-item svg { width: 18px; height: 18px; flex: none; color: var(--text-2); }
+.menu-item:hover,
+.menu-item:focus-visible { background: var(--surface-2); }
+.menu-item:focus-visible { outline-offset: -2px; }
+.menu-item:disabled { opacity: 0.45; cursor: default; background: transparent; }
+.menu-item.danger,
+.menu-item.danger svg { color: var(--danger); }
+.menu-item.danger:hover { background: var(--danger-soft); }
+.menu-item .switch { margin-left: auto; padding-left: 16px; }
+.menu-sep { height: 1px; margin: 6px 0; background: var(--border); }
 
 .cat-empty {
   padding: 18px;

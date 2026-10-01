@@ -8,7 +8,7 @@ Open it with a right-click on the extension's icon → **Options**, or with **Ma
 
 ## Groups
 
-The groups are listed in their [categories](categories.md) – every category is a tinted frame, marked with a folder icon, that contains its groups. Its header has the name, an on/off switch for all its groups, **Open all**, and buttons to collapse, add, move and delete. There is always at least one category; at first it's **Default**.
+The groups are listed in their [categories](categories.md) – every category is a tinted frame, marked with a folder icon, that contains its groups. Its header has ⌄ to collapse it, the name, an on/off switch for all its groups, **Open all**, ⇕ to collapse all its groups, and the ⋮ menu to add a group, move or delete the category, and to choose whether **Open all** creates its tab groups collapsed. There is always at least one category; at first it's **Default**.
 
 Each group is a card. Its header shows:
 
@@ -16,7 +16,7 @@ Each group is a card. Its header shows:
 - the **priority** (1 = checked first – see [Which group wins](url-patterns.md#which-group-wins))
 - a **preview** of the tab group in its color, with its title in the tab strip
 - the **Active/Paused** switch
-- **↑ ↓** to change the order within the category, and the trash can to delete the group
+- ⋮ – a menu with **Move up** / **Move down** (within the category), the switch **Open collapsed** (**Open now** and the popup create the tab group collapsed – see [Collapsed tab groups](open-group.md#collapsed-tab-groups)) and **Delete group**. It works like the [category's menu](categories.md#managing-categories), also with the keyboard.
 
 To change the order, you can also **drag a card by its header** – within its category or onto another one. Press <kbd>Esc</kbd> while dragging to cancel.
 
@@ -30,9 +30,9 @@ The fields:
 | **URL patterns** | One per line – see [URL patterns](url-patterns.md). |
 | **Pages to open** | Optional, one URL per line – see [Open a group in one click](open-group.md). Below the field you see what would be opened, and the **Open now** button. |
 
-**Add group** below the list appends a new card to the last category – with the first color no other group uses yet. **+** in a category's header adds it to that category instead. **Add category** appends a new category.
+**Add group** below the list appends a new card to the last category – with the first color no other group uses yet. **Add group** in the ⋮ menu of a category's header adds it to that category instead. **Add category** appends a new category.
 
-**Deleting** a group removes it from the list. Until you save, **Discard** brings it back. What happens when you delete a category: see [Managing categories](categories.md#managing-categories).
+**Delete group** in a group's ⋮ menu removes it from the list. Until you save, **Discard** brings it back. What happens when you delete a category: see [Managing categories](categories.md#managing-categories).
 
 ### Collapsing
 

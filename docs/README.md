@@ -12,7 +12,7 @@ For installation, see the [main README](../README.md#installation).
 |---|---|
 | [Automatic grouping](automatic-grouping.md) | When a tab is moved into a group, when it's left alone, pausing, sorting tabs that are already open |
 | [URL patterns](url-patterns.md) | The full pattern syntax: domains, paths, ports, schemes, wildcards, regular expressions, exclusions, priority |
-| [Open a group in one click](open-group.md) | Opening all pages of a group as a tab group, without duplicates |
+| [Open a group in one click](open-group.md) | Opening all pages of a group as a tab group, without duplicates – or a whole category; expanded or collapsed |
 | [The popup](popup.md) | Everything behind the toolbar icon: on/off switch, “Open group”, current tab, assigning a domain |
 | [The settings page](settings.md) | Editing groups, errors and hints, testing a URL, behavior options, saving |
 | [Categories](categories.md) | Sorting groups into categories, the “Default” category, priority, the category in the tab title, collapsing |

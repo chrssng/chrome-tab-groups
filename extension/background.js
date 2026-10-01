@@ -342,12 +342,16 @@ async function placeInListOrder(windowId, chromeGroupId, def, config) {
  *  - Optionally (openInListOrder), a new group is placed among the others
  *    according to the order of the list.
  * focus: false leaves the active tab alone (all but the first group of a category).
+ * collapse: the group ends up collapsed instead, and the active tab stays where
+ *   it is. Left out: the group's own “Open collapsed” – “Open all” passes its
+ *   category's “Open all collapsed” instead.
  */
-async function openGroup(groupId, windowId, { focus = true } = {}) {
+async function openGroup(groupId, windowId, { focus = true, collapse } = {}) {
   await stateReady;
   const config = await getConfig();
   const def = config.groups.find((g) => g.id === groupId && g.name);
   if (!def) throw new Error('This group no longer exists.');
+  collapse ??= def.openCollapsed;
   const { urls } = urlsToOpen(def);
   if (!urls.length) throw new Error(`There is no URL to open for “${def.name}”.`);
 
@@ -378,6 +382,7 @@ async function openGroup(groupId, windowId, { focus = true } = {}) {
   const active = tabs.find((t) => t.active);
   const reuseActive =
     focus &&
+    !collapse && // the empty tab would vanish into the collapsed group
     active &&
     !active.pinned &&
     isNeutralUrl(tabUrl(active)) &&
@@ -414,7 +419,8 @@ async function openGroup(groupId, windowId, { focus = true } = {}) {
       chrome.tabGroups.update(chromeGroupId, {
         title: groupTitle(def, config.categories),
         color: def.color,
-        collapsed: false,
+        // Never the group with the active tab – Chrome would switch to another tab
+        collapsed: collapse && active?.groupId !== chromeGroupId,
       }),
     );
     // Only new groups – one that was already open (maybe dragged by hand) stays put
@@ -425,13 +431,16 @@ async function openGroup(groupId, windowId, { focus = true } = {}) {
 
   // Show the group: its first new tab – or, if everything was already open, its first tab
   const focusId = opened[0] ?? (groupTabs.some((t) => t.active) ? null : groupTabs[0]?.id);
-  if (focus && focusId != null) await chrome.tabs.update(focusId, { active: true }).catch(() => {});
+  if (focus && !collapse && focusId != null) await chrome.tabs.update(focusId, { active: true }).catch(() => {});
   if (focus && !win.focused) await chrome.windows.update(win.id, { focused: true }).catch(() => {});
 
   return { name: def.name, opened: opened.length, alreadyOpen: urls.length - missing.length, failed };
 }
 
-/** Opens all groups of a category (that have something to open), in the order of the list. */
+/**
+ * Opens all groups of a category (that have something to open), in the order
+ * of the list – expanded, or collapsed if the category says so.
+ */
 async function openCategory(categoryId, windowId) {
   await stateReady;
   const config = await getConfig();
@@ -443,7 +452,7 @@ async function openCategory(categoryId, windowId) {
 
   const total = { name, groups: defs.length, opened: 0, alreadyOpen: 0, failed: [] };
   for (const [index, def] of defs.entries()) {
-    const result = await openGroup(def.id, windowId, { focus: index === 0 });
+    const result = await openGroup(def.id, windowId, { focus: index === 0, collapse: category.openCollapsed });
     total.opened += result.opened;
     total.alreadyOpen += result.alreadyOpen;
     total.failed.push(...result.failed);

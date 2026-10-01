@@ -50,7 +50,7 @@ test('Import “add”: nothing to add', () => {
 
 test('Every group is in a category – without categories there is “Default”', () => {
   const plain = normalizeConfig({ groups: [group('A'), group('B', { category: 'gone' })] });
-  assert.deepEqual(plain.categories, [{ id: 'default', name: 'Default' }]);
+  assert.deepEqual(plain.categories, [{ id: 'default', name: 'Default', openCollapsed: false }]);
   assert.deepEqual(plain.groups.map((g) => g.category), ['default', 'default']);
 
   // Ordered section by section; unknown category → the first category if there is no “Default”
@@ -118,17 +118,18 @@ test('Open Chrome groups are assigned to their configured group', () => {
 test('Export/import keeps categories by name', () => {
   const config = normalizeConfig({
     settings: { openInListOrder: true },
-    categories: [{ id: 'w', name: 'Work' }, { id: 'default', name: 'Default' }],
-    groups: [group('Docs', { category: 'w', showCategory: true }), group('Mail')],
+    categories: [{ id: 'w', name: 'Work', openCollapsed: true }, { id: 'default', name: 'Default' }],
+    groups: [group('Docs', { category: 'w', showCategory: true }), group('Mail', { openCollapsed: true })],
   });
   const exported = toExport(config);
-  assert.deepEqual(exported.categories, ['Work', 'Default']);
+  assert.deepEqual(exported.categories, [{ name: 'Work', openCollapsed: true }, { name: 'Default', openCollapsed: false }]);
   assert.deepEqual(exported.groups.map((g) => g.category), ['Work', 'Default']);
   const back = fromImport(JSON.stringify(exported));
-  assert.deepEqual(back.categories.map((c) => c.name), ['Work', 'Default']);
+  assert.deepEqual(back.categories.map((c) => `${c.name}:${c.openCollapsed}`), ['Work:true', 'Default:false']);
   assert.equal(back.groups[0].category, back.categories[0].id);
   assert.equal(back.groups[0].showCategory, true);
   assert.equal(back.groups[1].category, back.categories[1].id);
+  assert.deepEqual(back.groups.map((g) => g.openCollapsed), [false, true], 'a group’s own “Open collapsed”');
 
   // Older files: groups without a category go to “Default”; categories only named on groups are created
   const loose = fromImport(JSON.stringify({ groups: [{ name: 'X', category: 'Misc' }, { name: 'Y' }] }));
@@ -136,6 +137,7 @@ test('Export/import keeps categories by name', () => {
   assert.deepEqual(names(loose), ['X', 'Y']);
   const old = fromImport(JSON.stringify({ groups: [{ name: 'X' }], categories: ['Work', ''] }));
   assert.deepEqual(old.categories.map((c) => c.name), ['Work', 'Default'], '"" → “Default” at its position');
+  assert.ok(old.categories.every((c) => c.openCollapsed === false), 'names only → expanded');
 });
 
 test('Import “add” merges categories by name', () => {
@@ -165,6 +167,18 @@ test('Import “add” merges categories by name', () => {
   assert.ok(validateConfig(config).ok);
 });
 
+test('Import “add”: a merged category keeps its own “Open all collapsed”, a new one brings its own', () => {
+  const current = normalizeConfig({ categories: [{ id: 'w', name: 'Work' }], groups: [group('A', { category: 'w' })] });
+  const imported = fromImport(
+    JSON.stringify({
+      categories: [{ name: 'work', openCollapsed: true }, { name: 'Reading', openCollapsed: true }],
+      groups: [{ name: 'B', category: 'Work' }, { name: 'C', category: 'Reading' }],
+    }),
+  );
+  const { config } = mergeImport(current, imported);
+  assert.deepEqual(config.categories.map((c) => `${c.name}:${c.openCollapsed}`), ['Work:false', 'Reading:true']);
+});
+
 test('Import “add”: a new category never takes over an existing ID', () => {
   const current = normalizeConfig({ categories: [{ id: 'x', name: 'Misc' }], groups: [group('A', { category: 'x' })] });
   const imported = normalizeConfig({ categories: [{ id: 'x', name: 'New' }], groups: [group('B', { category: 'x' })] });
@@ -178,6 +192,8 @@ test('The sample import file is valid and has no warnings', () => {
   const config = fromImport(readFileSync(new URL('./sample-groups.json', import.meta.url), 'utf8'));
   const { ok, report } = validateConfig(config);
   assert.ok(ok);
+  assert.deepEqual(config.categories.map((c) => `${c.name}:${c.openCollapsed}`), ['Work:false', 'Reading:true', 'Default:false']);
+  assert.deepEqual(config.groups.filter((g) => g.openCollapsed).map((g) => g.name), ['Local dev']);
   for (const g of config.groups) {
     assert.deepEqual(report.get(g.id).warnings, [], g.name);
     assert.equal(report.get(g.id).titleWarning, null, g.name);

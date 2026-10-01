@@ -14,7 +14,7 @@ import {
   groupTitle,
 } from '../lib/config.js';
 import { compileGroups, explainMatch, urlsToOpen, shortUrl } from '../lib/patterns.js';
-import { h, icon, chip, swatches, note, toast } from './dom.js';
+import { h, icon, chip, swatches, note, toast, loadIds, storeIds } from './dom.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -68,21 +68,6 @@ function resort() {
 }
 
 /* Collapsed categories and group cards (only on this device, only a view setting) */
-function loadIds(key) {
-  try {
-    const ids = JSON.parse(localStorage.getItem(key));
-    return new Set(Array.isArray(ids) ? ids : []);
-  } catch {
-    return new Set();
-  }
-}
-function storeIds(key, ids) {
-  try {
-    localStorage.setItem(key, JSON.stringify([...ids]));
-  } catch {
-    /* only a convenience */
-  }
-}
 const collapsed = loadIds('collapsedCategories');
 const collapsedCards = loadIds('collapsedGroups');
 const storeCollapsed = () => storeIds('collapsedCategories', collapsed);
@@ -146,12 +131,55 @@ function toggleButton(expanded, name, dataset) {
   );
 }
 
-function categoryHead(category, index) {
-  const id = category.id;
-  const button = (iconName, label, action, { disabled = false, extraClass = '' } = {}) =>
+/** A ⋮ button with a menu of menuItem()s and menuSep()s – see “Menu behind ⋮” below. */
+function moreMenu(name, ...items) {
+  return h(
+    'div',
+    { class: 'menu-wrap' },
     h(
       'button',
-      { type: 'button', class: `icon-btn ${extraClass}`.trim(), title: label, 'aria-label': label, disabled, dataset: { catAction: action } },
+      {
+        type: 'button',
+        class: 'icon-btn menu-btn',
+        title: 'More actions',
+        'aria-label': `More actions for “${name}”`,
+        'aria-haspopup': 'menu',
+        'aria-expanded': 'false',
+      },
+      icon('more'),
+    ),
+    h('div', { class: 'menu', role: 'menu', 'aria-label': 'More actions', tabindex: '-1', hidden: true }, items),
+  );
+}
+
+/** dataset: { action } in a group card, { catAction } in a category head. checked: true/false makes it a switch. */
+function menuItem(iconName, label, dataset, { disabled = false, title = null, extraClass = '', checked = null } = {}) {
+  return h(
+    'button',
+    {
+      type: 'button',
+      role: checked === null ? 'menuitem' : 'menuitemcheckbox',
+      'aria-checked': checked === null ? null : String(checked),
+      class: `menu-item ${extraClass}`.trim(),
+      tabindex: '-1', // ↓ ↑ move between the items, Tab leaves the menu
+      title,
+      disabled,
+      dataset,
+    },
+    icon(iconName),
+    label,
+    checked !== null && h('span', { class: 'switch', 'aria-hidden': 'true' }, h('span', { class: 'track' })),
+  );
+}
+
+const menuSep = () => h('div', { class: 'menu-sep', role: 'separator' });
+
+function categoryHead(category, index) {
+  const id = category.id;
+  const button = (iconName, label, action) =>
+    h(
+      'button',
+      { type: 'button', class: 'icon-btn', title: label, 'aria-label': label, dataset: { catAction: action } },
       icon(iconName),
     );
   const only = draft.categories.length === 1;
@@ -183,13 +211,24 @@ function categoryHead(category, index) {
       h('button', { type: 'button', class: 'btn small', dataset: { catAction: 'open' } }, icon('launch'), 'Open all'),
       h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
       button('foldAll', 'Collapse all groups of this category', 'fold-cards'),
-      button('plus', 'Add a group to this category', 'add'),
-      button('up', 'Move category up', 'up', { disabled: index === 0 }),
-      button('down', 'Move category down', 'down', { disabled: index === draft.categories.length - 1 }),
-      button('trash', only ? 'The last category can’t be deleted' : 'Delete category', 'delete', {
-        disabled: only,
-        extraClass: 'danger',
-      }),
+      // The rarer actions wait behind ⋮
+      moreMenu(
+        category.name || 'Unnamed category',
+        menuItem('plus', 'Add group', { catAction: 'add' }),
+        menuItem('up', 'Move category up', { catAction: 'up' }, { disabled: index === 0 }),
+        menuItem('down', 'Move category down', { catAction: 'down' }, { disabled: index === draft.categories.length - 1 }),
+        menuSep(),
+        menuItem('launch', 'Open all collapsed', { catAction: 'open-collapsed' }, {
+          checked: category.openCollapsed === true,
+          title: '“Open all” creates the tab groups collapsed – only their names show in the tab strip',
+        }),
+        menuSep(),
+        menuItem('trash', 'Delete category', { catAction: 'delete' }, {
+          disabled: only,
+          title: only ? 'The last category can’t be deleted' : null,
+          extraClass: 'danger',
+        }),
+      ),
     ),
   );
 }
@@ -215,14 +254,6 @@ function updateCategoryHead(section) {
   foldCards.title = label;
   foldCards.setAttribute('aria-label', label);
   foldCards.disabled = !groups.length;
-}
-
-function iconButton(iconName, label, action, { disabled = false, extraClass = '' } = {}) {
-  return h(
-    'button',
-    { type: 'button', class: `icon-btn ${extraClass}`.trim(), title: label, 'aria-label': label, disabled, dataset: { action } },
-    icon(iconName),
-  );
 }
 
 function preview(group) {
@@ -281,9 +312,18 @@ function groupCard(group, { index, first, last }) {
           h('span', { class: 'switch-label' }, group.enabled ? 'Active' : 'Paused'),
         ),
         h('span', { class: 'tools-sep', 'aria-hidden': 'true' }),
-        iconButton('up', 'Move up', 'up', { disabled: first }),
-        iconButton('down', 'Move down', 'down', { disabled: last }),
-        iconButton('trash', 'Delete group', 'delete', { extraClass: 'danger' }),
+        moreMenu(
+          group.name || 'Unnamed',
+          menuItem('up', 'Move up', { action: 'up' }, { disabled: first }),
+          menuItem('down', 'Move down', { action: 'down' }, { disabled: last }),
+          menuSep(),
+          menuItem('launch', 'Open collapsed', { action: 'open-collapsed' }, {
+            checked: group.openCollapsed === true,
+            title: '“Open now” and the popup create this tab group collapsed – “Open all” follows the category’s own switch',
+          }),
+          menuSep(),
+          menuItem('trash', 'Delete group', { action: 'delete' }, { extraClass: 'danger' }),
+        ),
       ),
     ),
     h(
@@ -602,7 +642,73 @@ els.groups.addEventListener('change', (event) => {
   refresh();
 });
 
+/* ---------- Menu behind ⋮ (category head and group card) ---------- */
+
+/** The ⋮ button whose menu is open – only one at a time. */
+let menuOwner = null;
+
+const menuItems = (menu) => [...menu.querySelectorAll('.menu-item:not(:disabled)')];
+
+function openMenu(button, focusLast = false) {
+  closeMenu();
+  const menu = button.nextElementSibling;
+  menu.hidden = false;
+  menu.classList.remove('opens-up');
+  button.setAttribute('aria-expanded', 'true');
+  menuOwner = button;
+  // Upwards if it doesn't fit below – at the bottom of the window, or behind the save bar
+  const bar = els.savebar.classList.contains('is-visible') && els.savebar.querySelector('.savebar-inner');
+  const limit = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+  menu.classList.toggle('opens-up', menu.getBoundingClientRect().bottom > limit);
+  const items = menuItems(menu);
+  (focusLast ? items.at(-1) : items[0]).focus();
+}
+
+function closeMenu(returnFocus = false) {
+  const button = menuOwner;
+  if (!button) return;
+  menuOwner = null;
+  button.nextElementSibling.hidden = true;
+  button.setAttribute('aria-expanded', 'false');
+  if (returnFocus) button.focus();
+}
+
+// A click elsewhere closes it: the focus leaves the menu
+els.groups.addEventListener('focusout', (event) => {
+  if (menuOwner && !menuOwner.parentElement.contains(event.relatedTarget)) closeMenu();
+});
+
+// Keyboard as in a native menu: ↓ ↑ open it and move between the items, Esc and Tab close it
+els.groups.addEventListener('keydown', (event) => {
+  const { key, target } = event;
+  if (menuOwner && key === 'Tab') {
+    closeMenu(true); // Tab then moves on from ⋮
+    return;
+  }
+  if (menuOwner && key === 'Escape') {
+    closeMenu(true);
+  } else if (target.matches('.menu-btn') && (key === 'ArrowDown' || key === 'ArrowUp')) {
+    openMenu(target, key === 'ArrowUp');
+  } else if (target.closest('.menu')) {
+    const items = menuItems(target.closest('.menu'));
+    const at = items.indexOf(target); // -1: the menu itself has the focus (clicked between the items)
+    const next = { ArrowDown: items[(at + 1) % items.length], ArrowUp: items.at(Math.max(at, 0) - 1), Home: items[0], End: items.at(-1) }[key];
+    if (!next) return;
+    next.focus();
+  } else {
+    return;
+  }
+  event.preventDefault();
+});
+
 els.groups.addEventListener('click', (event) => {
+  const menuButton = event.target.closest('.menu-btn');
+  if (menuButton) {
+    if (menuOwner === menuButton) closeMenu();
+    else openMenu(menuButton);
+    return;
+  }
+  if (event.target.closest('[role="menuitem"]')) closeMenu(true); // the chosen action follows – a switch keeps the menu open
   const catButton = event.target.closest('button[data-cat-action]');
   if (catButton) {
     categoryAction(catButton);
@@ -625,6 +731,14 @@ els.groups.addEventListener('click', (event) => {
     return;
   }
 
+  if (action === 'open-collapsed') {
+    const group = draft.groups[index];
+    group.openCollapsed = !group.openCollapsed;
+    button.setAttribute('aria-checked', String(group.openCollapsed));
+    refresh();
+    return;
+  }
+
   if (action === 'up' || action === 'down') {
     // Within the category – the neighbour in the same section
     const group = draft.groups[index];
@@ -634,8 +748,7 @@ els.groups.addEventListener('click', (event) => {
     renderGroups();
     refresh();
     const moved = cardOf(group.id);
-    const sameButton = moved.querySelector(`button[data-action="${action}"]`);
-    (sameButton.disabled ? moved.querySelector('.name') : sameButton).focus();
+    moved.querySelector('.card-head .menu-btn').focus(); // the menu is closed – back to its ⋮
     moved.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
@@ -681,6 +794,14 @@ function categoryAction(button) {
     return;
   }
 
+  if (action === 'open-collapsed') {
+    const category = draft.categories[index];
+    category.openCollapsed = !category.openCollapsed;
+    button.setAttribute('aria-checked', String(category.openCollapsed));
+    refresh();
+    return;
+  }
+
   if (action === 'fold-cards') {
     const ids = draft.groups.filter((g) => g.category === id).map((g) => g.id);
     const fold = ids.some((groupId) => !collapsedCards.has(groupId));
@@ -702,8 +823,7 @@ function categoryAction(button) {
     resort();
     renderGroups();
     refresh();
-    const sameButton = sectionOf(id).querySelector(`button[data-cat-action="${action}"]`);
-    (sameButton.disabled ? sectionOf(id).querySelector('.fold') : sameButton).focus();
+    sectionOf(id).querySelector('.cat-head .menu-btn').focus(); // the menu is closed – back to its ⋮
     sectionOf(id).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     return;
   }
@@ -818,7 +938,7 @@ els.addGroup.addEventListener('click', () => addGroup(draft.categories.at(-1).id
 
 els.addCategory.append(icon('folder'), 'Add category');
 els.addCategory.addEventListener('click', () => {
-  const category = { id: newId(), name: '' };
+  const category = { id: newId(), name: '', openCollapsed: false };
   draft.categories.push(category);
   renderGroups();
   refresh();

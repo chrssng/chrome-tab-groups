@@ -20,16 +20,20 @@ import {
   urlsToOpen,
   shortUrl,
 } from '../lib/patterns.js';
-import { h, icon, chip, swatches, note } from './dom.js';
+import { h, icon, chip, swatches, note, loadIds, storeIds } from './dom.js';
 
 const $ = (selector) => document.querySelector(selector);
 const NEW = '__new__';
+/** Collapsed category blocks under “Open group” – remembered on this device, apart from the settings page */
+const COLLAPSED_KEY = 'popupCollapsedCategories';
+const collapsed = loadIds(COLLAPSED_KEY);
 
 const els = {
   enabled: $('#enabled'),
   paused: $('#paused'),
   launch: $('#launch'),
   launchList: $('#launch-list'),
+  foldAll: $('#fold-all'),
   host: $('#host'),
   status: $('#status'),
   assign: $('#assign'),
@@ -143,23 +147,37 @@ async function renderLaunch() {
 
   if (!severalCategories(entries.map((e) => e.group))) {
     els.launchList.replaceChildren(...rows(entries));
+    updateFoldAll();
     return;
   }
-  // One block per category: heading with folder icon, its groups inside
+  // One block per category: heading with folder icon (a click on it collapses the block), its groups inside
   const blocks = [];
   for (const category of config.categories) {
     const inside = entries.filter((e) => e.group.category === category.id);
     if (!inside.length) continue;
     const name = category.name || 'Unnamed category';
+    const folded = collapsed.has(category.id);
     blocks.push(
       h(
         'li',
-        { class: 'launch-block' },
+        { class: `launch-block${folded ? ' is-collapsed' : ''}`, dataset: { category: category.id } },
         h(
           'div',
           { class: 'launch-cat' },
-          icon('folder'),
-          h('span', { class: 'launch-cat-name' }, name),
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'launch-fold',
+              title: folded ? 'Expand' : 'Collapse',
+              'aria-expanded': String(!folded),
+              onclick: (event) => toggleCategory(event.currentTarget),
+            },
+            icon('chevron'),
+            icon('folder'),
+            h('span', { class: 'launch-cat-name' }, name),
+            h('span', { class: 'launch-cat-count' }, plural(inside.length, 'group', 'groups')), // only while collapsed
+          ),
           inside.length > 1
             ? h(
                 'button',
@@ -178,7 +196,45 @@ async function renderLaunch() {
     );
   }
   els.launchList.replaceChildren(...blocks);
+  updateFoldAll();
 }
+
+/* Collapsed blocks stay that way the next time the popup opens */
+const launchBlocks = () => [...els.launchList.querySelectorAll('.launch-block')];
+
+function setFolded(block, folded) {
+  block.classList.toggle('is-collapsed', folded);
+  const button = block.querySelector('.launch-fold');
+  button.setAttribute('aria-expanded', String(!folded));
+  button.title = folded ? 'Expand' : 'Collapse';
+  if (folded) collapsed.add(block.dataset.category);
+  else collapsed.delete(block.dataset.category);
+}
+
+function toggleCategory(button) {
+  const block = button.closest('.launch-block');
+  setFolded(block, !block.classList.contains('is-collapsed'));
+  storeIds(COLLAPSED_KEY, collapsed);
+  updateFoldAll();
+}
+
+/** The button next to “Open group”: collapses all categories – or, if all are collapsed, expands them. */
+function updateFoldAll() {
+  const blocks = launchBlocks();
+  const anyOpen = blocks.some((b) => !b.classList.contains('is-collapsed'));
+  els.foldAll.hidden = !blocks.length;
+  els.foldAll.replaceChildren(icon('chevron'), anyOpen ? 'Collapse all' : 'Expand all');
+  els.foldAll.classList.toggle('is-folded', !anyOpen);
+  els.foldAll.setAttribute('aria-label', `${anyOpen ? 'Collapse' : 'Expand'} all categories`);
+}
+
+els.foldAll.addEventListener('click', () => {
+  const blocks = launchBlocks();
+  const fold = blocks.some((b) => !b.classList.contains('is-collapsed'));
+  for (const block of blocks) setFolded(block, fold);
+  storeIds(COLLAPSED_KEY, collapsed);
+  updateFoldAll();
+});
 
 async function renderStatus() {
   els.host.textContent = describePage(url);
@@ -419,6 +475,9 @@ els.manage.addEventListener('click', () => {
 
 async function init() {
   [config, tab] = await Promise.all([loadConfig(), getActiveTab()]);
+  // Forget collapsed categories that no longer exist
+  for (const id of collapsed) if (!config.categories.some((c) => c.id === id)) collapsed.delete(id);
+  storeIds(COLLAPSED_KEY, collapsed);
   els.enabled.checked = config.settings.enabled;
   els.paused.hidden = config.settings.enabled;
   await renderLaunch();

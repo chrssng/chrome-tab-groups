@@ -28,7 +28,7 @@ If you don't have any groups yet, the file is loaded right away. Otherwise you c
 
 | Choice | What happens |
 |---|---|
-| **Add to my groups** | Your groups and Behavior options stay. The groups from the file are added at the end of their category. Categories with the same name (upper/lower case doesn't count) are merged, new categories are added at the end. Groups whose name already exists in the same category are skipped – you're told how many. |
+| **Add to my groups** | Your groups and Behavior options stay. The groups from the file are added at the end of their category. Categories with the same name (upper/lower case doesn't count) are merged – they keep their own **Open all collapsed** – new categories are added at the end. Groups whose name already exists in the same category are skipped – you're told how many. |
 | **Replace all groups** | Your categories, groups and Behavior options are replaced by those from the file. |
 | **Cancel** | Nothing happens. <kbd>Esc</kbd> does the same. |
 
@@ -58,7 +58,9 @@ A minimal file:
     "ungroupOnLeave": false,
     "openInListOrder": false
   },
-  "categories": ["Work"],
+  "categories": [
+    { "name": "Work", "openCollapsed": false }
+  ],
   "groups": [
     {
       "name": "Development",
@@ -67,13 +69,19 @@ A minimal file:
       "color": "blue",
       "patterns": ["github.com", "!github.com/my-company", "localhost:3000"],
       "openUrls": [],
-      "enabled": true
+      "enabled": true,
+      "openCollapsed": false
     }
   ]
 }
 ```
 
-`categories` lists the category names in their order. It can be left out – categories that only appear on groups are created in the order they first appear.
+`categories` lists the categories in their order. An entry can also be just the name (`"Work"`), as in files from older versions. The list can be left out – categories that only appear on groups are then created in the order they first appear.
+
+| Category field | | If missing or invalid |
+|---|---|---|
+| `name` | Name of the category | `Default` |
+| `openCollapsed` | `true` = **Open all** creates the tab groups collapsed – see [Collapsed tab groups](open-group.md#collapsed-tab-groups) | `false` |
 
 | Group field | | If missing or invalid |
 |---|---|---|
@@ -84,6 +92,7 @@ A minimal file:
 | `patterns` | URL patterns, one string per line | none |
 | `openUrls` | Pages to open | none |
 | `enabled` | `false` = paused | `true` |
+| `openCollapsed` | `true` = opening the group on its own (**Open now**, popup) creates its tab group collapsed – see [Collapsed tab groups](open-group.md#collapsed-tab-groups) | `false` |
 
 | Settings field | Option | If missing |
 |---|---|---|
@@ -107,7 +116,7 @@ Good to know:
 | *Work* | *Issues & PRs* | wildcards in paths; has to stay above *GitHub* |
 | | *GitHub* | a domain with all subdomains |
 | | *Docs* | path prefixes, comments, pages to open without a scheme |
-| | *Local dev* | ports, IP addresses, `http://` for localhost |
+| | *Local dev* | ports, IP addresses, `http://` for localhost; **Open collapsed** is on |
 | *Reading* | *Docs* | the same name as in *Work* – titled *Reading · Docs* in the tab strip |
 | | *Wikipedia* | a pattern with scheme and wildcard subdomain |
 | | *PDFs* | a regular expression |
@@ -115,7 +124,7 @@ Good to know:
 | *Default* | *Google* | exclusions (`!mail.google.com`, `!google.com/maps`); a catch-all, so its category is at the bottom |
 | | *Mail* | picks up what *Google* excludes |
 
-The file also turns on **Remove a tab from its group when it leaves the group** and **Open groups in list order**.
+The file also turns on **Remove a tab from its group when it leaves the group** and **Open groups in list order**, and sets *Reading* to **Open all collapsed** – see [Collapsed tab groups](open-group.md#collapsed-tab-groups).
 
 ## Updating the extension or moving to another computer
 

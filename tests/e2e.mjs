@@ -361,11 +361,21 @@ const t17 = await createTab(U('docs.example.test/manual'));
 info = await waitGroup(t17, 'Docs');
 check('Group created in the UI takes effect immediately', info?.color === 'pink', JSON.stringify(info));
 
-// Change the order: Docs to the top
-for (let i = 0; i < 6; i++) await card.locator('[data-action="up"]').click();
+// Change the order: Docs to the top – with “Move up” in its ⋮ menu
+for (let i = 0; i < 6; i++) {
+  await card.locator('.menu-btn').click();
+  await card.locator('[data-action="up"]').click();
+}
 check('Moving up changes the order', (await optionsPage.locator('.group-card').first().locator('.name').inputValue()) === 'Docs');
 await optionsPage.click('#discard');
 check('Discard restores the saved state', (await optionsPage.locator('.group-card').last().locator('.name').inputValue()) === 'Docs');
+await card.locator('.menu-btn').click();
+await card.locator('[data-action="delete"]').click();
+check(
+  'Group menu: “Delete group” removes the card',
+  (await card.count()) === 0 && (await optionsPage.locator('.group-card').count()) === 6 && (await optionsPage.locator('.menu:visible').count()) === 0,
+);
+await optionsPage.click('#discard');
 
 // Drag and drop: Docs (last) by its head onto the top half of the card above it
 const names = () => optionsPage.locator('.group-card .name').evaluateAll((els) => els.map((e) => e.value));
@@ -574,6 +584,24 @@ wt = await waitFor(async () => {
 });
 check('Settings: “Open now” opens the group in the same window', wt, JSON.stringify(await windowTabs(optionsWindow)));
 
+// “Open collapsed” – a switch in the group's ⋮ menu: “Open now” (saves first) creates the tab group collapsed, the settings stay in front
+await optionsPage.bringToFront();
+const startSwitch = startCard.locator('[data-action="open-collapsed"]');
+await startCard.locator('.menu-btn').click();
+await startSwitch.click();
+const startSwitchedOn = (await startSwitch.getAttribute('aria-checked')) === 'true';
+await optionsPage.keyboard.press('Escape');
+await startCard.locator('[data-action="open"]').click();
+const startGroup = await waitFor(async () =>
+  (await sw.evaluate((w) => chrome.tabGroups.query({ windowId: w }), optionsWindow)).find((g) => g.title === 'Start'),
+);
+const frontTab = await sw.evaluate(async (w) => (await chrome.tabs.query({ windowId: w, active: true }))[0]?.url, optionsWindow);
+check(
+  'Settings: with “Open collapsed”, “Open now” creates the tab group collapsed',
+  startSwitchedOn && startGroup?.collapsed === true && frontTab?.includes('options.html'),
+  JSON.stringify({ startSwitchedOn, startGroup, frontTab }),
+);
+
 // O9: “Open groups in list order” – list order Start, Paused, Tools; opened as Tools, Start, Paused
 await sw.evaluate(async () => {
   const { settings } = await chrome.storage.sync.get('settings');
@@ -599,7 +627,7 @@ check('List order: … and between its neighbours', r?.ok && (await stripOrder(W
 
 // ---------- Categories ----------
 // “Wiki” exists in two categories (same title in the tab strip, told apart by color),
-// “Tool” shows its category in the title.
+// “Tool” shows its category in the title, the second “Wiki” has its own “Open collapsed” (which “Open all” ignores).
 await sw.evaluate(async (P) => {
   await chrome.storage.sync.clear();
   const g = (name, category, color, host, extra = {}) => ({
@@ -611,7 +639,7 @@ await sw.evaluate(async (P) => {
       categories: [{ id: 'ca', name: 'Alpha' }, { id: 'cb', name: 'Beta' }],
     },
     'group:wa': g('Wiki', 'ca', 'blue', 'wiki-a.test'),
-    'group:wb': g('Wiki', 'cb', 'red', 'wiki-b.test'),
+    'group:wb': g('Wiki', 'cb', 'red', 'wiki-b.test', { openCollapsed: true }),
     'group:tool': g('Tool', 'cb', 'green', 'tool.test', { showCategory: true }),
   });
 }, PORT_SUFFIX);
@@ -642,14 +670,83 @@ await optionsPage.locator('.cat-section').nth(1).locator('.cat-name').fill('Bee'
 await optionsPage.click('#save');
 check('Categories: renaming a category renames the open group', await waitGroup(tool, 'Bee · Tool'));
 
+/** The tab strip of a window: its tabs as group titles ('-' = no group, “(collapsed)” marked), and the active tab's URL. */
+const stripOf = (w) =>
+  sw.evaluate(async (w) => {
+    const titles = Object.fromEntries(
+      (await chrome.tabGroups.query({ windowId: w })).map((g) => [g.id, g.title + (g.collapsed ? ' (collapsed)' : '')]),
+    );
+    const tabs = (await chrome.tabs.query({ windowId: w })).sort((a, b) => a.index - b.index);
+    const active = tabs.find((t) => t.active);
+    return { strip: tabs.map((t) => titles[t.groupId] ?? '-').join(), active: active && (active.url || active.pendingUrl) };
+  }, w);
+const openCategoryIn = (w) => optionsPage.evaluate((w) => chrome.runtime.sendMessage({ type: 'openCategory', categoryId: 'cb', windowId: w }), w);
+
 const W5 = await sw.evaluate(async (url) => (await chrome.windows.create({ url })).id, U('other.test/cat2'));
 await sleep(600);
-r = await optionsPage.evaluate((w) => chrome.runtime.sendMessage({ type: 'openCategory', categoryId: 'cb', windowId: w }), W5);
-const w5Titles = await sw.evaluate(async (w) => {
-  const titles = Object.fromEntries((await chrome.tabGroups.query({ windowId: w })).map((g) => [g.id, g.title]));
-  return (await chrome.tabs.query({ windowId: w })).sort((a, b) => a.index - b.index).map((t) => titles[t.groupId] ?? '-');
-}, W5);
-check('Categories: “Open all” opens every group of the category in order', r?.ok && w5Titles.join() === '-,Wiki,Bee · Tool', JSON.stringify({ r, w5Titles }));
+r = await openCategoryIn(W5);
+const w5 = await stripOf(W5);
+check('Categories: “Open all” opens every group of the category in order, expanded – a group’s own switch doesn’t count', r?.ok && w5.strip === '-,Wiki,Bee · Tool', JSON.stringify({ r, w5 }));
+
+// “Open all collapsed” – a switch in the ⋮ menu: the tab groups are created collapsed, the active tab stays where it is
+await optionsPage.bringToFront();
+const beeSwitch = optionsPage.locator('.cat-section').nth(1).locator('[data-cat-action="open-collapsed"]');
+await optionsPage.locator('.cat-section').nth(1).locator('.cat-head .menu-btn').click();
+await beeSwitch.click();
+const switchedOn = (await beeSwitch.getAttribute('aria-checked')) === 'true' && (await beeSwitch.isVisible()); // the menu stays open
+await optionsPage.keyboard.press('Escape');
+await optionsPage.click('#save');
+await waitFor(async () => (await optionsPage.locator('#savebar.is-visible').count()) === 0);
+const W6 = await sw.evaluate(async (url) => (await chrome.windows.create({ url })).id, U('other.test/cat3'));
+await sleep(600);
+r = await openCategoryIn(W6);
+let w6 = await stripOf(W6);
+check(
+  'Categories: “Open all collapsed” creates the tab groups collapsed, the active tab stays',
+  switchedOn && r?.ok && w6.strip === '-,Wiki (collapsed),Bee · Tool (collapsed)' && w6.active?.includes('other.test'),
+  JSON.stringify({ switchedOn, r, w6 }),
+);
+// Once more while a tab of the category is active: Chrome can't show it in a collapsed group, so that one stays expanded
+const wikiTab = await sw.evaluate(
+  async (w) => (await chrome.tabs.query({ windowId: w })).find((t) => (t.url || t.pendingUrl).includes('wiki-b.test')).id,
+  W6,
+);
+await sw.evaluate((id) => chrome.tabs.update(id, { active: true }), wikiTab);
+r = await openCategoryIn(W6);
+w6 = await stripOf(W6);
+check(
+  'Categories: … except the group with the active tab',
+  r?.ok && r.opened === 0 && w6.strip === '-,Wiki,Bee · Tool (collapsed)' && w6.active?.includes('wiki-b.test'),
+  JSON.stringify({ r, w6 }),
+);
+
+// Popup: a click on a category's name collapses its block – still collapsed the next time, “Open all” stays
+const catPopup = await context.newPage();
+await catPopup.setViewportSize({ width: 340, height: 600 });
+await catPopup.goto(`chrome-extension://${extId}/popup.html?tab=${tool}`);
+await catPopup.waitForSelector('.launch-block');
+const beeBlock = catPopup.locator('.launch-block', { hasText: 'Bee' });
+await beeBlock.locator('.launch-fold').click();
+const beeFolded = !(await beeBlock.locator('.launch-sublist').isVisible()) && (await beeBlock.locator('.launch-fold').getAttribute('aria-expanded')) === 'false';
+await catPopup.reload();
+await catPopup.waitForSelector('.launch-block');
+const beeStillFolded = !(await beeBlock.locator('.launch-sublist').isVisible()) && (await beeBlock.locator('.launch-all').isVisible());
+await beeBlock.locator('.launch-fold').click();
+check(
+  'Popup: a category collapses and expands with a click on its name, and stays that way',
+  beeFolded && beeStillFolded && (await beeBlock.locator('.launch-sublist').isVisible()),
+  JSON.stringify({ beeFolded, beeStillFolded }),
+);
+const foldAllLabel = () => catPopup.locator('#fold-all').innerText();
+await catPopup.click('#fold-all');
+const popupAllFolded = (await catPopup.locator('.launch-block.is-collapsed').count()) === 2 && (await foldAllLabel()) === 'Expand all';
+await catPopup.click('#fold-all');
+check(
+  'Popup: “Collapse all” / “Expand all” folds and unfolds every category',
+  popupAllFolded && (await catPopup.locator('.launch-block.is-collapsed').count()) === 0 && (await foldAllLabel()) === 'Collapse all',
+  JSON.stringify({ popupAllFolded, label: await foldAllLabel() }),
+);
+await catPopup.close();
 
 // Collapsing: a single card, then all categories at once
 await optionsPage.bringToFront();
@@ -671,8 +768,36 @@ check(
   cardsFolded && (await cat0.locator('.group-card.is-collapsed').count()) === 0,
 );
 
+// Category menu (⋮): moving the category closes it, the focus stays on the moved category's ⋮
+const openMenus = () => optionsPage.locator('.menu:visible').count();
+await cat0.locator('.cat-head .menu-btn').click();
+const menuShown = (await openMenus()) === 1 && (await cat0.locator('.cat-head .menu-btn').getAttribute('aria-expanded')) === 'true';
+await cat0.locator('[data-cat-action="down"]').click();
+const movedOrder = await optionsPage.$$eval('.cat-section .cat-name', (els) => els.map((e) => e.value));
+const focusedMenuBtn = () =>
+  optionsPage.evaluate(() => document.activeElement?.matches('.cat-head .menu-btn') && document.activeElement.closest('.cat-section').querySelector('.cat-name').value);
+check(
+  'Category menu: “Move category down” moves the category and closes the menu',
+  menuShown && movedOrder.join() === 'Bee,Alpha' && (await openMenus()) === 0 && (await focusedMenuBtn()) === 'Alpha',
+  JSON.stringify({ menuShown, movedOrder, focus: await focusedMenuBtn() }),
+);
+// Keyboard: ↓ opens it on the first item, ↑ wraps around to the last one, Esc closes it again
+const focusedItem = () => optionsPage.evaluate(() => document.activeElement?.dataset.catAction);
+await optionsPage.keyboard.press('ArrowDown');
+const firstItem = await focusedItem();
+await optionsPage.keyboard.press('ArrowUp');
+const lastItem = await focusedItem();
+await optionsPage.keyboard.press('Escape');
+check(
+  'Category menu: keyboard – ↓ opens it, ↑ wraps around, Esc closes it',
+  firstItem === 'add' && lastItem === 'delete' && (await openMenus()) === 0 && (await focusedMenuBtn()) === 'Alpha',
+  JSON.stringify({ firstItem, lastItem }),
+);
+await optionsPage.click('#discard'); // back to Alpha, Bee
+
 // Deleting a category (all collapsed): its groups join the category above, which stays collapsed – the last category stays
 await optionsPage.click('#collapse-all');
+await optionsPage.locator('.cat-section').nth(1).locator('.cat-head .menu-btn').click();
 await optionsPage.locator('.cat-section').nth(1).locator('[data-cat-action="delete"]').click();
 const merged = await optionsPage.$$eval('.cat-section', (els) =>
   els.map((s) => `${s.querySelector('.cat-name').value}:${s.querySelectorAll('.group-card').length}:${s.classList.contains('is-collapsed')}`),

@@ -6,7 +6,11 @@
     "ungroupOnLeave": true,
     "openInListOrder": true
   },
-  "categories": ["Work", "Reading", "Default"],
+  "categories": [
+    { "name": "Work", "openCollapsed": false },
+    { "name": "Reading", "openCollapsed": true },
+    { "name": "Default", "openCollapsed": false }
+  ],
   "groups": [
     {
       "name": "Issues & PRs",
@@ -65,7 +69,8 @@
         "localhost/dashboard",
         "localhost/phpmyadmin"
       ],
-      "enabled": true
+      "enabled": true,
+      "openCollapsed": true
     },
     {
       "name": "Docs",

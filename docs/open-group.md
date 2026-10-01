@@ -16,7 +16,25 @@ Every group can open all of its pages at once – as a tab group with its name a
 - **Settings:** **Open all** in the category's header. Unsaved changes are saved first.
 - **Popup:** **Open all** next to the category's heading (shown if your groups are spread over several categories and the category has more than one group to open).
 
-All groups of the category that have something to open are opened one after another, in the order of the list – paused groups too. The first group's first page becomes the active tab. Groups that are already open only get their missing pages, as usual.
+All groups of the category that have something to open are opened one after another, in the order of the list – paused groups too. The first group's first page becomes the active tab – unless the category opens collapsed, see below. Groups that are already open only get their missing pages, as usual.
+
+### Collapsed tab groups
+
+Two switches in the settings let tab groups open **collapsed** – only their names show in the tab strip:
+
+| Switch | Where | Applies to |
+|---|---|---|
+| **Open collapsed** | the group's ⋮ menu | opening this group on its own: **Open now** in the settings, or a click in the popup |
+| **Open all collapsed** | the category's ⋮ menu | **Open all** of the category – in the settings and in the popup |
+
+Both are off by default, and they don't affect each other: **Open all** only follows the category's switch – a group's own **Open collapsed** doesn't count there.
+
+When a tab group opens collapsed:
+
+- you stay on the tab you're on – an empty New Tab isn't used for the first page
+- if the tab group is already open, it's collapsed as well – unless it contains the tab you're looking at: Chrome can't show the active tab inside a collapsed group
+
+Click a group's name in the tab strip to expand it. Both switches are saved with your settings (**Save**).
 
 ## Which pages are opened
 
@@ -62,7 +80,7 @@ Below the field, the settings page always shows what would be opened, e.g. **Ope
 
 - **Window:** the window you opened the popup (or the settings page) in. If no normal browser window is open, a new window is created.
 - **Empty tab:** if the active tab is an empty New Tab page, it's used for the first page.
-- **Focus:** the new tabs open in the background and are grouped; then the group is expanded and its first new page becomes the active tab.
+- **Focus:** the new tabs open in the background and are grouped; then the group is expanded and its first new page becomes the active tab. (Unless the group opens collapsed – then it stays collapsed and the active tab stays where it is, see [Collapsed tab groups](#collapsed-tab-groups).)
 - **Position:** a new tab group is added at the end of the tab strip.
 
 ### Opening groups in list order

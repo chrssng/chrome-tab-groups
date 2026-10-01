@@ -20,9 +20,11 @@ In the settings, every category is a tinted frame – marked with a folder icon 
 | **Active / Paused / Mixed** | Turns all groups of the category on or off at once. *Mixed* = some are paused. Hidden while the category is empty. |
 | **Open all** | Opens all groups of the category – see [Opening a whole category](open-group.md#opening-a-whole-category) |
 | ⇕ | Collapses all group cards of the category – or, if all are collapsed, expands them |
-| **+** | Adds a new group to this category |
-| **↑ ↓** | Moves the whole category up or down |
-| Trash can | Deletes the category |
+| ⋮ | Opens a menu with the entries below. With the keyboard: <kbd>↓</kbd> <kbd>↑</kbd> open it and choose, <kbd>Enter</kbd> runs, <kbd>Esc</kbd> closes it. |
+| ⋮ → **Add group** | Adds a new group to this category |
+| ⋮ → **Move category up / down** | Moves the whole category up or down |
+| ⋮ → **Open all collapsed** | A switch, off by default: when it's on, **Open all** creates the tab groups collapsed – no matter what the groups' own **Open collapsed** says. See [Collapsed tab groups](open-group.md#collapsed-tab-groups). The menu stays open when you flip it. |
+| ⋮ → **Delete category** | Deletes the category |
 
 - **Add category** (below the list) appends a new, empty category. Give it a name before saving.
 - **Deleting a category** doesn't delete its groups: they join the category **above** it (at its end) – or, if it was the first one, the category **below** it (at its start). So the order of all groups stays the same. If that category is collapsed, it stays collapsed and is briefly highlighted. The **last category can't be deleted**.
@@ -34,7 +36,7 @@ As always, nothing is saved until you click **Save** – **Discard** undoes ever
 
 - **Category** field of the group – the group moves to the end of the chosen category.
 - **Drag** the group by its header onto another category – onto a group there, onto the category's header or onto an empty category. A collapsed category stays collapsed and is briefly highlighted.
-- **+** in a category's header creates the new group right there. **Add group** below the list adds it to the last category.
+- **Add group** in the ⋮ menu of a category's header creates the new group right there. **Add group** below the list adds it to the last category.
 - A new group created in the [popup](popup.md#assign-a-domain) goes into the category you choose there.
 
 ## Names
@@ -67,16 +69,20 @@ That's why the settings page warns you: *The group “Docs” in “Reading” h
 On the settings page you can collapse:
 
 - **a category** – with ⌄ in its header; only the header stays visible
-- **a group** – with ⌄ in its header; only the header with the preview, the Active/Paused switch and the buttons stays visible. A group with errors gets a red border, so you notice it even when it's collapsed.
+- **a group** – with ⌄ in its header; only the header with the preview, the Active/Paused switch and ⋮ stays visible. A group with errors gets a red border, so you notice it even when it's collapsed.
 - **all groups of a category** – with ⇕ in the category's header
 - **all categories** – with **Collapse all** / **Expand all** at the top right of the list
 
 Collapsing only changes the view: it's remembered on this computer, but not saved with your settings and not synced.
+
+In the popup, categories can be collapsed as well – see [In the popup](#in-the-popup). The popup remembers that on its own: collapsing a category on the settings page doesn't collapse it in the popup, and the other way round.
 
 A collapsed category is only expanded automatically when you need to see something in it: when you add a group to it, when you choose it in a group's **Category** field, when you expand all of its groups, or when saving fails because of an error in it – then the group with the first error is expanded, too.
 
 ## In the popup
 
 As soon as your groups are spread over several categories, the popup shows each category as its own block – with a folder icon and the category's name, its groups inside, and **Open all** for categories with more than one group.
+
+Click a category's name to collapse or expand its block, or **Collapse all** / **Expand all** next to “Open group” for all of them at once. A collapsed block shows how many groups it contains, and **Open all** keeps working. The popup remembers which categories are collapsed – only on this computer.
 
 Under **Current tab**, the category is shown as well: *Belongs to* **GitHub** *in* **Work** – unless the group's title already contains it. The list for **Assign domain** is sorted by category, and a new group gets a category right there. See [The popup](popup.md).
